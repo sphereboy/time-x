@@ -6,17 +6,16 @@ import { Plus, Edit2, Trash2 } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 
-const getBackgroundColor = (offset: number): string => {
+const getBackgroundColor = (hour: number): string => {
   const colors = [
-    "bg-yellow-400",
-    "bg-orange-400",
-    "bg-rose-400",
-    "bg-purple-900",
-    "bg-indigo-900",
-    "bg-slate-900",
-    "bg-teal-600",
+    "bg-indigo-900", // 0-3: Night
+    "bg-purple-900", // 4-7: Dawn
+    "bg-rose-400", // 8-11: Morning
+    "bg-yellow-400", // 12-15: Afternoon
+    "bg-orange-400", // 16-19: Evening
+    "bg-teal-600", // 20-23: Night
   ];
-  return colors[offset + 10] || "bg-gray-400";
+  return colors[Math.floor(hour / 4)] || "bg-gray-400";
 };
 
 export function TimeZoneComparer(): React.ReactElement {
@@ -125,7 +124,8 @@ export function TimeZoneComparer(): React.ReactElement {
       <div className={styles.timezonesContainer}>
         {locations.map((location) => {
           const localTime = addHours(currentTime, location.offset);
-          const backgroundColor = getBackgroundColor(location.offset);
+          const localHour = parseInt(format(localTime, "H"), 10);
+          const backgroundColor = getBackgroundColor(localHour);
 
           return (
             <div
