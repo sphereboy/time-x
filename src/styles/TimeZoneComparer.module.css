@@ -1,0 +1,215 @@
+.timeAdjustButton {
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.timeAdjustButton:hover {
+  opacity: 1;
+}
+
+.locationCard {
+  transition: all 0.3s ease-in-out;
+}
+
+.locationCard:hover {
+  transform: translateY(-5px);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+.addButton {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  z-index: 10;
+}
+
+.addButton:hover {
+  background-color: #f0f0f0;
+}
+
+.timezonesContainer {
+  display: flex;
+  flex-grow: 1;
+  overflow-x: auto;
+}
+
+.timezoneColumn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  color: white;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.hoverCard {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  transform: translateY(100%);
+  transition: transform 0.3s ease-in-out;
+}
+
+.timezoneColumn:hover .hoverCard {
+  transform: translateY(0);
+}
+
+.time {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.hours {
+  font-size: 4rem;
+  cursor: pointer;
+}
+
+.minutes {
+  font-size: 2rem;
+  opacity: 0.7;
+  margin-top: -0.5rem; /* Adjust this value to fine-tune the vertical spacing */
+}
+
+.date {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.location {
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.timezone {
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+
+.secondaryLabels {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 5px;
+}
+
+.offset {
+  position: absolute;
+  bottom: 10px;
+  font-size: 0.8rem;
+  opacity: 0.6;
+}
+
+.actionButtons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.actionButton {
+  background-color: white;
+  color: black;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.editButton,
+.deleteButton {
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.editButton:hover {
+  background-color: #e0e0e0;
+}
+
+.deleteButton:hover {
+  background-color: #ffcccb;
+}
+
+.hourInputWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.hourInput {
+  font-size: 4rem;
+  font-weight: bold;
+  width: 5rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+
+.hourInput:focus {
+  outline: none;
+  border-bottom: 2px solid white;
+}
+
+.placeholderHour {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  font-weight: bold;
+  color: rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+  z-index: 1;
+}
