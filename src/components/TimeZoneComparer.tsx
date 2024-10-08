@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { format, addHours, setHours, differenceInHours } from "date-fns";
-import { Plus, Trash2, Home } from "lucide-react";
+import { Plus, Trash2, Home, X, Edit2 } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
@@ -99,6 +99,16 @@ export function TimeZoneComparer(): React.ReactElement {
   const [inputValue, setInputValue] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
   const [manualAdjustment, setManualAdjustment] = useState(false);
+  const [editingLabel, setEditingLabel] = useState<{
+    id: string;
+    index: number;
+  } | null>(null);
+  const [labelInputValue, setLabelInputValue] = useState("");
+  const labelInputRef = useRef<HTMLInputElement>(null);
+  const [newLabelInput, setNewLabelInput] = useState<{
+    id: string;
+    value: string;
+  } | null>(null);
 
   const currentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
@@ -156,6 +166,12 @@ export function TimeZoneComparer(): React.ReactElement {
       inputRef.current.focus();
     }
   }, [editingHour]);
+
+  useEffect(() => {
+    if (editingLabel && labelInputRef.current) {
+      labelInputRef.current.focus();
+    }
+  }, [editingLabel]);
 
   const handleAddLocation = useCallback((): void => {
     // This function will be passed to AddLocationDialog
@@ -218,21 +234,28 @@ export function TimeZoneComparer(): React.ReactElement {
     [handleHourChange, inputValue, locations, currentTime, setCurrentTime]
   );
 
-  const handleAddCustomLabel = useCallback(
-    (locationId: string) => {
-      const newLabel = prompt("Enter new custom label:");
-      if (newLabel) {
-        const location = locations.find((loc) => loc.id === locationId);
-        if (location) {
-          const updatedLabels = location.secondaryLabels
-            ? [...location.secondaryLabels, newLabel]
-            : [newLabel];
-          updateLocation(locationId, { secondaryLabels: updatedLabels });
-        }
+  const handleAddCustomLabel = useCallback((locationId: string) => {
+    setNewLabelInput({ id: locationId, value: "" });
+  }, []);
+
+  const handleNewLabelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (newLabelInput) {
+      setNewLabelInput({ ...newLabelInput, value: e.target.value });
+    }
+  };
+
+  const handleNewLabelSubmit = (locationId: string) => {
+    if (newLabelInput && newLabelInput.value.trim()) {
+      const location = locations.find((loc) => loc.id === locationId);
+      if (location) {
+        const updatedLabels = location.secondaryLabels
+          ? [...location.secondaryLabels, newLabelInput.value.trim()]
+          : [newLabelInput.value.trim()];
+        updateLocation(locationId, { secondaryLabels: updatedLabels });
       }
-    },
-    [locations, updateLocation]
-  );
+    }
+    setNewLabelInput(null);
+  };
 
   const handleRemoveLocation = useCallback(
     (id: string) => {
@@ -243,6 +266,50 @@ export function TimeZoneComparer(): React.ReactElement {
     },
     [locations, removeLocation]
   );
+
+  const handleEditLabel = (
+    locationId: string,
+    index: number,
+    currentLabel: string
+  ) => {
+    setEditingLabel({ id: locationId, index });
+    setLabelInputValue(currentLabel);
+  };
+
+  const handleLabelChange = (locationId: string, index: number) => {
+    const location = locations.find((loc) => loc.id === locationId);
+    if (location) {
+      const updatedLabels = [...(location.secondaryLabels || [])];
+      if (labelInputValue.trim() === "") {
+        // Remove the label if it's empty
+        updatedLabels.splice(index, 1);
+      } else {
+        updatedLabels[index] = labelInputValue.trim();
+      }
+      updateLocation(locationId, { secondaryLabels: updatedLabels });
+    }
+    setEditingLabel(null);
+    setLabelInputValue("");
+  };
+
+  const handleDeleteLabel = (locationId: string, index: number) => {
+    const location = locations.find((loc) => loc.id === locationId);
+    if (location && location.secondaryLabels) {
+      const updatedLabels = location.secondaryLabels.filter(
+        (_, i) => i !== index
+      );
+      updateLocation(locationId, { secondaryLabels: updatedLabels });
+    }
+  };
+
+  const handleLabelClick = (
+    locationId: string,
+    index: number,
+    currentLabel: string
+  ) => {
+    setEditingLabel({ id: locationId, index });
+    setLabelInputValue(currentLabel);
+  };
 
   const getAdjustedTime = (baseTime: Date, offset: number) => {
     const utcTime = baseTime.getTime() + baseTime.getTimezoneOffset() * 60000;
@@ -346,17 +413,62 @@ export function TimeZoneComparer(): React.ReactElement {
                 {location.secondaryLabels && (
                   <div className={styles.secondaryLabels}>
                     {location.secondaryLabels.map((label, i) => (
-                      <div key={i}>{label}</div>
+                      <div key={i} className={styles.secondaryLabelWrapper}>
+                        {editingLabel?.id === location.id &&
+                        editingLabel.index === i ? (
+                          <input
+                            ref={labelInputRef}
+                            type="text"
+                            value={labelInputValue}
+                            onChange={(e) => setLabelInputValue(e.target.value)}
+                            onBlur={() => handleLabelChange(location.id, i)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter")
+                                handleLabelChange(location.id, i);
+                              if (e.key === "Escape") setEditingLabel(null);
+                            }}
+                            className={styles.labelInput}
+                          />
+                        ) : (
+                          <span
+                            onClick={() =>
+                              handleLabelClick(location.id, i, label)
+                            }
+                            className={styles.labelText}
+                          >
+                            {label}
+                          </span>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
-                <button
-                  onClick={() => handleAddCustomLabel(location.id)}
-                  className={styles.addCustomLabelButton}
-                  aria-label="Add custom label"
-                >
-                  <Plus size={16} />
-                </button>
+                {newLabelInput && newLabelInput.id === location.id ? (
+                  <div className={styles.newLabelInputWrapper}>
+                    <input
+                      type="text"
+                      value={newLabelInput.value}
+                      onChange={handleNewLabelChange}
+                      onBlur={() => handleNewLabelSubmit(location.id)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter")
+                          handleNewLabelSubmit(location.id);
+                        if (e.key === "Escape") setNewLabelInput(null);
+                      }}
+                      className={styles.newLabelInput}
+                      placeholder="New label"
+                      autoFocus
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => handleAddCustomLabel(location.id)}
+                    className={styles.addCustomLabelButton}
+                    aria-label="Add custom label"
+                  >
+                    <Plus size={16} />
+                  </button>
+                )}
               </div>
               <div className={styles.footer}>
                 {isCurrentTimezone && (
