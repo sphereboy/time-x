@@ -8,24 +8,15 @@ import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
 import timezones from "@/lib/timezones";
 
-// Add this mapping at the top of your file, after the imports
-const timeZoneMapping: { [key: string]: string } = {};
-
-timezones.forEach((tz) => {
-  timeZoneMapping[tz.abbr] = tz.value;
-  timeZoneMapping[tz.text] = tz.value;
-});
-
-// Add any additional mappings that might be necessary
-Object.assign(timeZoneMapping, {
+// Update this object to only include the working time zones
+export const timeZoneMapping: { [key: string]: string } = {
   "Hawaiian Standard Time": "Pacific/Honolulu",
   "Alaskan Standard Time": "America/Anchorage",
   "Pacific Standard Time": "America/Los_Angeles",
   "Mountain Standard Time": "America/Denver",
   "Central Standard Time": "America/Chicago",
   "Eastern Standard Time": "America/New_York",
-  // Add any other necessary mappings here
-});
+};
 
 const getBackgroundColor = (hour: number): string => {
   const colors = [
@@ -167,33 +158,35 @@ export function TimeZoneComparer(): React.ReactElement {
 
   const getAdjustedTime = useCallback((baseTime: Date, timeZone: string) => {
     const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
-    if (isValidTimeZone(mappedTimeZone)) {
+    try {
       return new Date(
         baseTime.toLocaleString("en-US", { timeZone: mappedTimeZone })
       );
+    } catch (error) {
+      console.warn(`Invalid time zone: ${timeZone}. Using local time instead.`);
+      return new Date(baseTime);
     }
-    console.warn(`Invalid time zone: ${timeZone}. Using local time instead.`);
-    return new Date(baseTime);
   }, []);
 
   const formatTime = useCallback((date: Date, timeZone: string) => {
     const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
-    if (isValidTimeZone(mappedTimeZone)) {
+    try {
       return new Intl.DateTimeFormat("en-US", {
         timeZone: mappedTimeZone,
         hour: "2-digit",
         minute: "2-digit",
         hour12: false,
       }).format(date);
+    } catch (error) {
+      console.warn(
+        `Invalid time zone: ${timeZone}. Using local time format instead.`
+      );
+      return date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
     }
-    console.warn(
-      `Invalid time zone: ${timeZone}. Using local time format instead.`
-    );
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
   }, []);
 
   const handleHourChange = useCallback(

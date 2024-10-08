@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import timezones, { getTimezoneName, getTimezoneAbbr } from "@/lib/timezones";
+import { timeZoneMapping } from "./TimeZoneComparer";
 
 interface AddLocationDialogProps {
   children: React.ReactNode;
@@ -29,32 +29,24 @@ export function AddLocationDialog({ children }: AddLocationDialogProps) {
   const [selectedTimezone, setSelectedTimezone] = useState("");
   const [locationName, setLocationName] = useState("");
   const addLocation = useTimeZoneStore((state) => state.addLocation);
-  const locations = useTimeZoneStore((state) => state.locations);
 
   const handleTimezoneChange = (value: string) => {
     setSelectedTimezone(value);
-    // If no location name is set, use the timezone name as the default
     if (!locationName) {
-      const timezone = timezones.find((tz) => tz.value === value);
-      if (timezone) {
-        setLocationName(getTimezoneName(timezone));
-      }
+      setLocationName(
+        Object.keys(timeZoneMapping).find(
+          (key) => timeZoneMapping[key] === value
+        ) || value
+      );
     }
   };
 
   const handleAddLocation = () => {
     if (selectedTimezone) {
-      const timezone = timezones.find((tz) => tz.value === selectedTimezone);
-      if (timezone) {
-        // Update this part to pass name and label as separate strings
-        addLocation(
-          locationName || getTimezoneName(timezone),
-          timezone.value // Use the full timezone identifier as the label
-        );
-        setOpen(false);
-        setSelectedTimezone("");
-        setLocationName("");
-      }
+      addLocation(locationName || selectedTimezone, selectedTimezone);
+      setOpen(false);
+      setSelectedTimezone("");
+      setLocationName("");
     }
   };
 
@@ -72,9 +64,9 @@ export function AddLocationDialog({ children }: AddLocationDialogProps) {
             </SelectTrigger>
             <SelectContent>
               <ScrollArea className="h-[300px]">
-                {timezones.map((timezone) => (
-                  <SelectItem key={timezone.value} value={timezone.value}>
-                    {getTimezoneName(timezone)} ({getTimezoneAbbr(timezone)})
+                {Object.entries(timeZoneMapping).map(([name, value]) => (
+                  <SelectItem key={value} value={value}>
+                    {name}
                   </SelectItem>
                 ))}
               </ScrollArea>
@@ -87,19 +79,8 @@ export function AddLocationDialog({ children }: AddLocationDialogProps) {
             onChange={(e) => setLocationName(e.target.value)}
           />
         </div>
-        <Button
-          onClick={handleAddLocation}
-          disabled={!selectedTimezone} // Only disable if no timezone is selected
-        >
-          {locations.some(
-            (loc) =>
-              loc.label ===
-              getTimezoneAbbr(
-                timezones.find((tz) => tz.value === selectedTimezone)!
-              )
-          )
-            ? "Add Label"
-            : "Add Location"}
+        <Button onClick={handleAddLocation} disabled={!selectedTimezone}>
+          Add Location
         </Button>
       </DialogContent>
     </Dialog>
