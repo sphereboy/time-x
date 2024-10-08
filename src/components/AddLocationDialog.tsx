@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import {
   Dialog,
@@ -29,6 +29,14 @@ export function AddLocationDialog({ children }: AddLocationDialogProps) {
   const [selectedTimezone, setSelectedTimezone] = useState("");
   const [locationName, setLocationName] = useState("");
   const addLocation = useTimeZoneStore((state) => state.addLocation);
+  const locations = useTimeZoneStore((state) => state.locations);
+
+  const availableTimezones = useMemo(() => {
+    const existingLabels = new Set(locations.map((loc) => loc.label));
+    return Object.entries(timeZoneMapping).filter(
+      ([_, value]) => !existingLabels.has(value)
+    );
+  }, [locations]);
 
   const handleTimezoneChange = (value: string) => {
     setSelectedTimezone(value);
@@ -64,7 +72,7 @@ export function AddLocationDialog({ children }: AddLocationDialogProps) {
             </SelectTrigger>
             <SelectContent>
               <ScrollArea className="h-[300px]">
-                {Object.entries(timeZoneMapping).map(([name, value]) => (
+                {availableTimezones.map(([name, value]) => (
                   <SelectItem key={value} value={value}>
                     {name}
                   </SelectItem>

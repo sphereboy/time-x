@@ -1,12 +1,14 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
-import { Plus, Trash2, Home } from "lucide-react";
+import { Plus, Trash2, Home, RotateCcw } from "lucide-react"; // Add RotateCcw import
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
 import timezones from "@/lib/timezones";
+
+// Remove the import of zonedTimeToUtc and utcToZonedTime
 
 // Update this object to only include the working time zones
 export const timeZoneMapping: { [key: string]: string } = {
@@ -106,6 +108,14 @@ const isValidTimeZone = (timeZone: string): boolean => {
     console.warn(`Invalid time zone: ${timeZone}`);
     return false;
   }
+};
+
+// Add this function to calculate timezone offset
+const getTimezoneOffset = (timeZone: string): number => {
+  const date = new Date();
+  const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
+  const tzDate = new Date(date.toLocaleString("en-US", { timeZone }));
+  return (tzDate.getTime() - utcDate.getTime()) / 60000;
 };
 
 export function TimeZoneComparer(): React.ReactElement {
@@ -298,6 +308,27 @@ export function TimeZoneComparer(): React.ReactElement {
     resetToCurrentTimezone();
   }, [resetToCurrentTimezone]);
 
+  // Modify the sortLocations function
+  const sortLocations = useCallback((locations: Location[]) => {
+    const homeLocation = locations.find((loc) => loc.isCurrent);
+    if (!homeLocation) return locations;
+
+    const homeOffset = getTimezoneOffset(homeLocation.label || "UTC");
+
+    return locations.sort((a, b) => {
+      const aOffset = getTimezoneOffset(a.label || "UTC") - homeOffset;
+      const bOffset = getTimezoneOffset(b.label || "UTC") - homeOffset;
+
+      return aOffset - bOffset;
+    });
+  }, []);
+
+  // Modify the locations rendering to use the sorted locations
+  const sortedLocations = useMemo(
+    () => sortLocations(locations),
+    [locations, sortLocations]
+  );
+
   console.log("Locations:", JSON.stringify(locations, null, 2));
 
   if (!currentTime) {
@@ -306,16 +337,22 @@ export function TimeZoneComparer(): React.ReactElement {
 
   return (
     <div className={styles.container}>
-      <AddLocationDialog>
-        <button className={styles.addButton} aria-label="Add location">
-          <Plus />
+      <div className={styles.topButtons}>
+        <AddLocationDialog>
+          <button className={styles.addButton} aria-label="Add location">
+            <Plus size={20} />
+          </button>
+        </AddLocationDialog>
+        <button
+          className={styles.resetButton}
+          onClick={handleReset}
+          aria-label="Reset to current time"
+        >
+          <RotateCcw size={20} />
         </button>
-      </AddLocationDialog>
-      <button className={styles.resetButton} onClick={handleReset}>
-        Reset to Current Time
-      </button>
+      </div>
       <div className={styles.timezonesContainer}>
-        {locations.map((location) => {
+        {sortedLocations.map((location) => {
           const adjustedTime = getAdjustedTime(
             currentTime,
             location.label || ""

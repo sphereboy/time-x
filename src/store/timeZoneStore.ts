@@ -1,10 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-// import { addHours } from "date-fns";
+import { v4 as uuidv4 } from "uuid";
+import { timeZoneMapping } from "@/components/TimeZoneComparer";
 
-// Add this function at the top of the file, after the imports
-const generateId = (): string => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+// Remove the import of zonedTimeToUtc
+
+// ... (keep the rest of the imports and interfaces)
+
+// Add this function to calculate timezone offset
+const getTimezoneOffset = (timeZone: string): number => {
+  const date = new Date();
+  const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
+  const tzDate = new Date(date.toLocaleString("en-US", { timeZone }));
+  return (tzDate.getTime() - utcDate.getTime()) / 60000;
 };
 
 interface Location {
@@ -25,6 +33,7 @@ interface TimeZoneState {
   setCurrentTime: (time: Date) => void;
   initializeWithCurrentTimezone: () => void;
   resetToCurrentTimezone: () => void;
+  sortLocations: (locations: Location[]) => Location[];
 }
 
 const getCurrentTimezone = (): Location => {
@@ -38,53 +47,46 @@ const getCurrentTimezone = (): Location => {
   };
 };
 
-// Import the timeZoneMapping here or define it in this file
-const timeZoneMapping: { [key: string]: string } = {
-  "Hawaiian Standard Time": "Pacific/Honolulu",
-  "Alaskan Standard Time": "America/Anchorage",
-  "Pacific Standard Time": "America/Los_Angeles",
-  "Mountain Standard Time": "America/Denver",
-  "Central Standard Time": "America/Chicago",
-  "Eastern Standard Time": "America/New_York",
-  // Add more mappings as needed
-};
-
 export const useTimeZoneStore = create<TimeZoneState>()(
   persist(
     (set, get) => ({
       locations: [getCurrentTimezone()],
       currentTime: new Date(),
-      addLocation: (name: string, label: string) =>
+      addLocation: (name: string, label: string) => {
         set((state) => {
-          const newLocation: Location = {
-            id: generateId(),
+          // Check if the location already exists
+          if (state.locations.some((loc) => loc.label === label)) {
+            console.warn(`Location with label ${label} already exists.`);
+            return state; // Return the current state without changes
+          }
+
+          const newLocation = {
+            id: uuidv4(),
             name,
             label,
             offset: 0,
             isCurrent: false,
           };
-          return { locations: [...state.locations, newLocation] };
-        }),
-      removeLocation: (id: string) =>
+          const updatedLocations = [...state.locations, newLocation];
+          return { locations: state.sortLocations(updatedLocations) };
+        });
+      },
+      removeLocation: (id: string) => {
         set((state) => ({
-          locations: state.locations.filter(
-            (loc) => loc.id !== id || loc.isCurrent
+          locations: state.sortLocations(
+            state.locations.filter((loc) => loc.id !== id)
           ),
-        })),
-      updateLocation: (id: string, updates: Partial<Location>) =>
-        set((state) => {
-          const location = state.locations.find((loc) => loc.id === id);
-          if (!location) return state;
-          const updatedLocation = { ...location, ...updates };
-          if (JSON.stringify(location) === JSON.stringify(updatedLocation)) {
-            return state;
-          }
-          return {
-            locations: state.locations.map((loc) =>
-              loc.id === id ? updatedLocation : loc
-            ),
-          };
-        }),
+        }));
+      },
+      updateLocation: (id: string, updates: Partial<Location>) => {
+        set((state) => ({
+          locations: state.sortLocations(
+            state.locations.map((loc) =>
+              loc.id === id ? { ...loc, ...updates } : loc
+            )
+          ),
+        }));
+      },
       setCurrentTime: (time: Date) => set({ currentTime: time }),
       initializeWithCurrentTimezone: () => {
         const { locations } = get();
@@ -99,6 +101,19 @@ export const useTimeZoneStore = create<TimeZoneState>()(
       resetToCurrentTimezone: () => {
         const currentTimezone = getCurrentTimezone();
         set({ locations: [currentTimezone] });
+      },
+      sortLocations: (locations: Location[]) => {
+        const homeLocation = locations.find((loc) => loc.isCurrent);
+        if (!homeLocation) return locations;
+
+        const homeOffset = getTimezoneOffset(homeLocation.label || "UTC");
+
+        return locations.sort((a, b) => {
+          const aOffset = getTimezoneOffset(a.label || "UTC") - homeOffset;
+          const bOffset = getTimezoneOffset(b.label || "UTC") - homeOffset;
+
+          return aOffset - bOffset;
+        });
       },
     }),
     {

@@ -533,3 +533,35 @@
 .resetButton:hover {
   background-color: #e0e0e0;
 }
+
+.container {
+  position: relative;
+}
+
+.topButtons {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+
+.addButton,
+.resetButton {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.addButton:hover,
+.resetButton:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
