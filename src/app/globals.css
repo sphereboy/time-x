@@ -76,3 +76,13 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+:root {
+  --timezone-bg: hsl(0 0% 0%);
+}
+
+@supports (color: color(display-p3 1 1 1)) {
+  :root {
+    --timezone-bg: color(display-p3 var(--h) var(--s) var(--l) / var(--a));
+  }
+}
