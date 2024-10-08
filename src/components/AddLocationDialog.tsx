@@ -18,7 +18,7 @@ import {
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import timezones from "@/lib/timezones";
+import timezones, { getTimezoneName, getTimezoneAbbr } from "@/lib/timezones";
 
 interface AddLocationDialogProps {
   onAdd: () => void;
@@ -49,7 +49,8 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
 
   const handleTimezoneChange = (value: string) => {
     setSelectedTimezone(value);
-    const funnyName = getFunnyName(value);
+    const timezone = timezones.find((tz) => tz.value === value);
+    const funnyName = getFunnyName(getTimezoneName(timezone));
     setLocationName("");
     setTimeout(() => {
       const input = document.getElementById(
@@ -63,15 +64,15 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
 
   const handleAdd = () => {
     if (selectedTimezone) {
-      const timezone = timezones.find((tz) => tz.name === selectedTimezone);
+      const timezone = timezones.find((tz) => tz.value === selectedTimezone);
       if (timezone) {
         const existingLocation = locations.find(
-          (loc) => loc.label === timezone.abbreviations[0]
+          (loc) => loc.label === getTimezoneAbbr(timezone)
         );
 
         if (existingLocation) {
           // Add new label to existing location
-          const newLabel = locationName || timezone.cities[0].name;
+          const newLabel = locationName || getTimezoneName(timezone);
           updateLocation(existingLocation.id, {
             secondaryLabels: [
               ...(existingLocation.secondaryLabels || []),
@@ -82,9 +83,9 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
           // Add new location
           addLocation({
             id: Date.now().toString(),
-            name: locationName || timezone.cities[0].name,
+            name: locationName || getTimezoneName(timezone),
             offset: timezone.offset,
-            label: timezone.abbreviations[0],
+            label: getTimezoneAbbr(timezone),
           });
         }
 
@@ -111,8 +112,8 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
             <SelectContent>
               <ScrollArea className="h-[300px]">
                 {timezones.map((timezone) => (
-                  <SelectItem key={timezone.name} value={timezone.name}>
-                    {timezone.name} ({timezone.abbreviations.join("/")})
+                  <SelectItem key={timezone.value} value={timezone.value}>
+                    {getTimezoneName(timezone)} ({getTimezoneAbbr(timezone)})
                   </SelectItem>
                 ))}
               </ScrollArea>
@@ -129,8 +130,9 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
           {locations.some(
             (loc) =>
               loc.label ===
-              timezones.find((tz) => tz.name === selectedTimezone)
-                ?.abbreviations[0]
+              getTimezoneAbbr(
+                timezones.find((tz) => tz.value === selectedTimezone)!
+              )
           )
             ? "Add Label"
             : "Add Location"}
