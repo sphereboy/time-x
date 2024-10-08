@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { format, addHours, setHours, differenceInHours } from "date-fns";
-import { Plus, Edit2, Trash2, Home } from "lucide-react";
+import { Plus, Trash2, Home } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
@@ -82,7 +82,6 @@ const isLightColor = (color: string): boolean => {
 export function TimeZoneComparer(): React.ReactElement {
   const {
     locations,
-    addLocation,
     removeLocation,
     updateLocation,
     initializeWithCurrentTimezone,
