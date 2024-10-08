@@ -2,6 +2,11 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 // import { addHours } from "date-fns";
 
+// Add this function at the top of the file, after the imports
+const generateId = (): string => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
 interface Location {
   id: string;
   name: string;
@@ -14,11 +19,12 @@ interface Location {
 interface TimeZoneState {
   locations: Location[];
   currentTime: Date;
-  addLocation: (location: Location) => void;
+  addLocation: (name: string, label: string) => void;
   removeLocation: (id: string) => void;
   updateLocation: (id: string, updates: Partial<Location>) => void;
   setCurrentTime: (time: Date) => void;
   initializeWithCurrentTimezone: () => void;
+  resetToCurrentTimezone: () => void;
 }
 
 const getCurrentTimezone = (): Location => {
@@ -32,24 +38,40 @@ const getCurrentTimezone = (): Location => {
   };
 };
 
+// Import the timeZoneMapping here or define it in this file
+const timeZoneMapping: { [key: string]: string } = {
+  "Hawaiian Standard Time": "Pacific/Honolulu",
+  "Alaskan Standard Time": "America/Anchorage",
+  "Pacific Standard Time": "America/Los_Angeles",
+  "Mountain Standard Time": "America/Denver",
+  "Central Standard Time": "America/Chicago",
+  "Eastern Standard Time": "America/New_York",
+  // Add more mappings as needed
+};
+
 export const useTimeZoneStore = create<TimeZoneState>()(
   persist(
     (set, get) => ({
-      locations: [getCurrentTimezone()], // Initialize with only the current timezone
+      locations: [getCurrentTimezone()],
       currentTime: new Date(),
-      addLocation: (location) =>
+      addLocation: (name: string, label: string) =>
         set((state) => {
-          const exists = state.locations.some((loc) => loc.id === location.id);
-          if (exists) return state;
-          return { locations: [...state.locations, location] };
+          const newLocation: Location = {
+            id: generateId(),
+            name,
+            label,
+            offset: 0,
+            isCurrent: false,
+          };
+          return { locations: [...state.locations, newLocation] };
         }),
-      removeLocation: (id) =>
+      removeLocation: (id: string) =>
         set((state) => ({
-          locations: state.locations.filter((loc) => {
-            return loc.id !== id || loc.isCurrent;
-          }),
+          locations: state.locations.filter(
+            (loc) => loc.id !== id || loc.isCurrent
+          ),
         })),
-      updateLocation: (id, updates) =>
+      updateLocation: (id: string, updates: Partial<Location>) =>
         set((state) => {
           const location = state.locations.find((loc) => loc.id === id);
           if (!location) return state;
@@ -63,7 +85,7 @@ export const useTimeZoneStore = create<TimeZoneState>()(
             ),
           };
         }),
-      setCurrentTime: (time) => set({ currentTime: time }),
+      setCurrentTime: (time: Date) => set({ currentTime: time }),
       initializeWithCurrentTimezone: () => {
         const { locations } = get();
         if (locations.length === 0) {
@@ -74,10 +96,19 @@ export const useTimeZoneStore = create<TimeZoneState>()(
           }));
         }
       },
+      resetToCurrentTimezone: () => {
+        const currentTimezone = getCurrentTimezone();
+        set({ locations: [currentTimezone] });
+      },
     }),
     {
       name: "time-zone-storage",
-      partialize: (state) => ({ locations: state.locations }),
+      partialize: (state) => ({
+        locations: state.locations.map((loc) => ({
+          ...loc,
+          offset: 0, // Reset offset to avoid storing calculated values
+        })),
+      }),
     }
   )
 );

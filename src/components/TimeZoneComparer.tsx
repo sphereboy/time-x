@@ -1,13 +1,31 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
-import { format, addHours, setHours, differenceInHours } from "date-fns";
-import { getTimezoneOffset } from "date-fns-tz";
+import React, { useState, useEffect, useCallback } from "react";
+import { format } from "date-fns";
 import { Plus, Trash2, Home } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
 import timezones from "@/lib/timezones";
+
+// Add this mapping at the top of your file, after the imports
+const timeZoneMapping: { [key: string]: string } = {};
+
+timezones.forEach((tz) => {
+  timeZoneMapping[tz.abbr] = tz.value;
+  timeZoneMapping[tz.text] = tz.value;
+});
+
+// Add any additional mappings that might be necessary
+Object.assign(timeZoneMapping, {
+  "Hawaiian Standard Time": "Pacific/Honolulu",
+  "Alaskan Standard Time": "America/Anchorage",
+  "Pacific Standard Time": "America/Los_Angeles",
+  "Mountain Standard Time": "America/Denver",
+  "Central Standard Time": "America/Chicago",
+  "Eastern Standard Time": "America/New_York",
+  // Add any other necessary mappings here
+});
 
 const getBackgroundColor = (hour: number): string => {
   const colors = [
@@ -88,34 +106,57 @@ const isLightColor = (color: string): boolean => {
   return brightness > 155; // You can adjust this threshold as needed
 };
 
+const isValidTimeZone = (timeZone: string): boolean => {
+  try {
+    const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
+    Intl.DateTimeFormat(undefined, { timeZone: mappedTimeZone });
+    return true;
+  } catch (error) {
+    console.warn(`Invalid time zone: ${timeZone}`);
+    return false;
+  }
+};
+
 export function TimeZoneComparer(): React.ReactElement {
   const {
     locations,
     removeLocation,
     updateLocation,
     initializeWithCurrentTimezone,
-    // Remove the addLocation import since it's no longer needed here
+    setCurrentTime,
+    resetToCurrentTimezone, // Add this line
   } = useTimeZoneStore();
-  const [currentTime, setCurrentTime] = useState<Date | null>(null);
+  const [currentTime, setLocalCurrentTime] = useState<Date>(new Date());
   const [editingHour, setEditingHour] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState<string>("");
-  const inputRef = useRef<HTMLInputElement>(null);
   const [editingLabel, setEditingLabel] = useState<{
     id: string;
     index: number;
   } | null>(null);
   const [labelInputValue, setLabelInputValue] = useState("");
-  const labelInputRef = useRef<HTMLInputElement>(null);
   const [newLabelInput, setNewLabelInput] = useState<{
     id: string;
     value: string;
   } | null>(null);
-
-  const currentTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
   const [showColon, setShowColon] = useState(true);
 
-  // Add this effect for the pulsing colon
+  useEffect(() => {
+    initializeWithCurrentTimezone();
+  }, [initializeWithCurrentTimezone]);
+
+  useEffect(() => {
+    const updateTime = () => {
+      const newTime = new Date();
+      setLocalCurrentTime(newTime);
+      setCurrentTime(newTime);
+    };
+
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+
+    return () => clearInterval(timer);
+  }, [setCurrentTime]);
+
   useEffect(() => {
     const colonInterval = setInterval(() => {
       setShowColon((prev) => !prev);
@@ -124,99 +165,50 @@ export function TimeZoneComparer(): React.ReactElement {
     return () => clearInterval(colonInterval);
   }, []);
 
-  useEffect(() => {
-    initializeWithCurrentTimezone();
-  }, [initializeWithCurrentTimezone]);
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(now);
-    };
-
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
-
-    return () => clearInterval(timer);
+  const getAdjustedTime = useCallback((baseTime: Date, timeZone: string) => {
+    const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
+    if (isValidTimeZone(mappedTimeZone)) {
+      return new Date(
+        baseTime.toLocaleString("en-US", { timeZone: mappedTimeZone })
+      );
+    }
+    console.warn(`Invalid time zone: ${timeZone}. Using local time instead.`);
+    return new Date(baseTime);
   }, []);
 
-  const getAdjustedTime = useCallback((baseTime: Date, offset: number) => {
-    const localOffset = baseTime.getTimezoneOffset();
-    const targetOffset = offset * 60;
-    return new Date(baseTime.getTime() + (targetOffset + localOffset) * 60000);
+  const formatTime = useCallback((date: Date, timeZone: string) => {
+    const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
+    if (isValidTimeZone(mappedTimeZone)) {
+      return new Intl.DateTimeFormat("en-US", {
+        timeZone: mappedTimeZone,
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(date);
+    }
+    console.warn(
+      `Invalid time zone: ${timeZone}. Using local time format instead.`
+    );
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   }, []);
-
-  useEffect(() => {
-    if (currentTime) {
-      const updatedLocations = locations.map((location) => {
-        const locationTimezone = timezones.find((tz) =>
-          location.label ? tz.utc.includes(location.label) : false
-        );
-        if (locationTimezone) {
-          const offset =
-            getTimezoneOffset(locationTimezone.utc[0], currentTime) / 60;
-          return {
-            ...location,
-            offset: offset,
-          };
-        }
-        return location;
-      });
-
-      // Update locations in the store, but only if they've changed
-      updatedLocations.forEach((updatedLocation) => {
-        const existingLocation = locations.find(
-          (loc) => loc.id === updatedLocation.id
-        );
-        if (
-          existingLocation &&
-          existingLocation.offset !== updatedLocation.offset
-        ) {
-          updateLocation(updatedLocation.id, {
-            offset: updatedLocation.offset,
-          });
-        }
-      });
-    }
-  }, [currentTime, locations, updateLocation]);
-
-  useEffect(() => {
-    if (editingHour && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [editingHour]);
-
-  useEffect(() => {
-    if (editingLabel && labelInputRef.current) {
-      labelInputRef.current.focus();
-    }
-  }, [editingLabel]);
-
-  // Remove the handleAddLocation function
-  // const handleAddLocation = useCallback(
-  //   (newLocation: Location) => {
-  //     addLocation(newLocation);
-  //   },
-  //   [addLocation]
-  // );
 
   const handleHourChange = useCallback(
     (locationId: string, newHour: string) => {
       const parsedHour = parseInt(newHour, 10);
       if (!isNaN(parsedHour) && parsedHour >= 0 && parsedHour <= 23) {
-        const location = locations.find((loc) => loc.id === locationId);
-        if (location && currentTime) {
-          const localTime = addHours(currentTime, location.offset);
-          const newLocalTime = setHours(localTime, parsedHour);
-          const timeDiff = differenceInHours(newLocalTime, localTime);
-          const newGlobalTime = addHours(currentTime, timeDiff);
-          setCurrentTime(newGlobalTime);
-        }
+        const newDate = new Date(currentTime);
+        newDate.setHours(parsedHour);
+        setLocalCurrentTime(newDate);
+        setCurrentTime(newDate);
       }
       setEditingHour(null);
       setInputValue("");
     },
-    [locations, currentTime, setCurrentTime]
+    [currentTime, setCurrentTime]
   );
 
   const handleInputChange = useCallback(
@@ -235,23 +227,19 @@ export function TimeZoneComparer(): React.ReactElement {
         handleHourChange(locationId, inputValue);
       } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
         e.preventDefault();
-        const location = locations.find((loc) => loc.id === locationId);
-        if (location && currentTime) {
-          const localTime = addHours(currentTime, location.offset);
-          const currentHour = parseInt(format(localTime, "HH"), 10);
-          const newHour =
-            e.key === "ArrowUp"
-              ? (currentHour + 1) % 24
-              : (currentHour - 1 + 24) % 24;
-          const newLocalTime = setHours(localTime, newHour);
-          const timeDiff = differenceInHours(newLocalTime, localTime);
-          const newGlobalTime = addHours(currentTime, timeDiff);
-          setCurrentTime(newGlobalTime);
-          setInputValue(newHour.toString().padStart(2, "0"));
-        }
+        const currentHour = currentTime.getHours();
+        const newHour =
+          e.key === "ArrowUp"
+            ? (currentHour + 1) % 24
+            : (currentHour - 1 + 24) % 24;
+        const newDate = new Date(currentTime);
+        newDate.setHours(newHour);
+        setLocalCurrentTime(newDate);
+        setCurrentTime(newDate);
+        setInputValue(newHour.toString().padStart(2, "0"));
       }
     },
-    [handleHourChange, inputValue, locations, currentTime, setCurrentTime]
+    [handleHourChange, inputValue, currentTime, setCurrentTime]
   );
 
   const handleAddCustomLabel = useCallback((locationId: string) => {
@@ -312,8 +300,15 @@ export function TimeZoneComparer(): React.ReactElement {
     setLabelInputValue(currentLabel);
   };
 
+  // Add this function to handle resetting
+  const handleReset = useCallback(() => {
+    resetToCurrentTimezone();
+  }, [resetToCurrentTimezone]);
+
+  console.log("Locations:", JSON.stringify(locations, null, 2));
+
   if (!currentTime) {
-    return <div>Loading...</div>; // Or any loading indicator
+    return <div>Loading...</div>;
   }
 
   return (
@@ -323,12 +318,20 @@ export function TimeZoneComparer(): React.ReactElement {
           <Plus />
         </button>
       </AddLocationDialog>
+      <button className={styles.resetButton} onClick={handleReset}>
+        Reset to Current Time
+      </button>
       <div className={styles.timezonesContainer}>
         {locations.map((location) => {
-          const adjustedTime = getAdjustedTime(currentTime, location.offset);
-          const localHour = parseInt(format(adjustedTime, "H"), 10);
+          const adjustedTime = getAdjustedTime(
+            currentTime,
+            location.label || ""
+          );
+          const formattedTime = formatTime(currentTime, location.label || "");
+          const [hours, minutes] = formattedTime.split(":");
+          const localHour = parseInt(hours, 10);
           const backgroundColor = getBackgroundColor(localHour);
-          const isCurrentTimezone = location.label === currentTimezone;
+          const isCurrentTimezone = location.isCurrent;
           const textColor = isLightColor(backgroundColor) ? "#393939" : "white";
 
           return (
@@ -358,7 +361,6 @@ export function TimeZoneComparer(): React.ReactElement {
                       {editingHour === location.id ? (
                         <>
                           <input
-                            ref={inputRef}
                             type="text"
                             value={inputValue}
                             onChange={handleInputChange}
@@ -371,7 +373,7 @@ export function TimeZoneComparer(): React.ReactElement {
                           />
                           {!inputValue && (
                             <div className={styles.placeholderHour}>
-                              {format(adjustedTime, "HH")}
+                              {hours}
                             </div>
                           )}
                         </>
@@ -383,7 +385,7 @@ export function TimeZoneComparer(): React.ReactElement {
                             setInputValue("");
                           }}
                         >
-                          {format(adjustedTime, "HH")}
+                          {hours}
                         </div>
                       )}
                     </div>
@@ -396,49 +398,53 @@ export function TimeZoneComparer(): React.ReactElement {
                         :
                       </div>
                     </div>
-                    <div className={styles.minutes}>
-                      {format(adjustedTime, "mm")}
-                    </div>
+                    <div className={styles.minutes}>{minutes}</div>
                   </div>
                 </div>
                 <div className={styles.date}>
                   {format(adjustedTime, "EEE. do")}
                 </div>
-                <div className={styles.location}>{location.name}</div>
-                <div className={styles.timezone}>{location.label}</div>
-                {location.secondaryLabels && (
-                  <div className={styles.secondaryLabels}>
-                    {location.secondaryLabels.map((label, i) => (
-                      <div key={i} className={styles.secondaryLabelWrapper}>
-                        {editingLabel?.id === location.id &&
-                        editingLabel.index === i ? (
-                          <input
-                            ref={labelInputRef}
-                            type="text"
-                            value={labelInputValue}
-                            onChange={(e) => setLabelInputValue(e.target.value)}
-                            onBlur={() => handleLabelChange(location.id, i)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter")
-                                handleLabelChange(location.id, i);
-                              if (e.key === "Escape") setEditingLabel(null);
-                            }}
-                            className={styles.labelInput}
-                          />
-                        ) : (
-                          <span
-                            onClick={() =>
-                              handleLabelClick(location.id, i, label)
-                            }
-                            className={styles.labelText}
-                          >
-                            {label}
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <div className={styles.location}>
+                  {location.name || "Unknown"}
+                </div>
+                <div className={styles.timezone}>
+                  {location.label || "Unknown"}
+                </div>
+                {location.secondaryLabels &&
+                  Array.isArray(location.secondaryLabels) && (
+                    <div className={styles.secondaryLabels}>
+                      {location.secondaryLabels.map((label, i) => (
+                        <div key={i} className={styles.secondaryLabelWrapper}>
+                          {editingLabel?.id === location.id &&
+                          editingLabel.index === i ? (
+                            <input
+                              type="text"
+                              value={labelInputValue}
+                              onChange={(e) =>
+                                setLabelInputValue(e.target.value)
+                              }
+                              onBlur={() => handleLabelChange(location.id, i)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter")
+                                  handleLabelChange(location.id, i);
+                                if (e.key === "Escape") setEditingLabel(null);
+                              }}
+                              className={styles.labelInput}
+                            />
+                          ) : (
+                            <span
+                              onClick={() =>
+                                handleLabelClick(location.id, i, label)
+                              }
+                              className={styles.labelText}
+                            >
+                              {label}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 {newLabelInput && newLabelInput.id === location.id ? (
                   <div className={styles.newLabelInputWrapper}>
                     <input
@@ -472,11 +478,26 @@ export function TimeZoneComparer(): React.ReactElement {
                     <Home size={20} />
                   </div>
                 )}
-                <div className={styles.offset}>{location.offset}</div>
+                <div className={styles.offset}>
+                  {(() => {
+                    if (isValidTimeZone(location.label || "")) {
+                      const parts = new Intl.DateTimeFormat("en-US", {
+                        timeZone:
+                          timeZoneMapping[location.label || ""] ||
+                          location.label,
+                        timeZoneName: "short",
+                      }).formatToParts(currentTime);
+                      const timeZonePart = parts.find(
+                        (part) => part.type === "timeZoneName"
+                      );
+                      return timeZonePart ? timeZonePart.value : "Unknown";
+                    }
+                    return "Invalid TZ";
+                  })()}
+                </div>
                 {isCurrentTimezone && (
                   <div className={styles.utcReference}>
-                    {format(addHours(adjustedTime, -location.offset), "HH:mm")}{" "}
-                    UTC
+                    {formatTime(currentTime, "UTC")} UTC
                   </div>
                 )}
               </div>

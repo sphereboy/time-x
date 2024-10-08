@@ -46,13 +46,11 @@ export function AddLocationDialog({ children }: AddLocationDialogProps) {
     if (selectedTimezone) {
       const timezone = timezones.find((tz) => tz.value === selectedTimezone);
       if (timezone) {
-        const newLocation = {
-          id: Date.now().toString(),
-          name: locationName || getTimezoneName(timezone), // Use timezone name if no custom name is provided
-          offset: 0, // This will be calculated dynamically in TimeZoneComparer
-          label: getTimezoneAbbr(timezone),
-        };
-        addLocation(newLocation);
+        // Update this part to pass name and label as separate strings
+        addLocation(
+          locationName || getTimezoneName(timezone),
+          timezone.value // Use the full timezone identifier as the label
+        );
         setOpen(false);
         setSelectedTimezone("");
         setLocationName("");
