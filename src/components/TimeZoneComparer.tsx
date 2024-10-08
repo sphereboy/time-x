@@ -11,7 +11,9 @@ import timezones, { getTimezoneOffset } from "@/lib/timezones";
 const getBackgroundColor = (hour: number): string => {
   const colors = [
     { time: 0, color: "#16053a" },
+    { time: 1, color: "#040B1D" },
     { time: 2, color: "#030c1b" },
+    { time: 3, color: "#040F21" },
     { time: 4, color: "#081930" },
     { time: 5, color: "#1b475b" },
     { time: 6, color: "#477a88" },
@@ -19,14 +21,19 @@ const getBackgroundColor = (hour: number): string => {
     { time: 8, color: "#93c6bc" },
     { time: 9, color: "#c1dabe" },
     { time: 10, color: "#e9ebb5" },
+    { time: 11, color: "#F5EB9F" },
     { time: 12, color: "#f9e886" },
+    { time: 13, color: "#FEE56D" },
     { time: 14, color: "#fbcf63" },
+    { time: 15, color: "#F7B45B" },
     { time: 16, color: "#f29b55" },
     { time: 17, color: "#d37d5c" },
     { time: 18, color: "#9a626a" },
     { time: 19, color: "#6a4277" },
+    { time: 20, color: "#4D2971" },
     { time: 21, color: "#2d1852" },
     { time: 22, color: "#301755" },
+    { time: 23, color: "#0C052C" },
     { time: 24, color: "#16053a" }, // Repeat the first color for a smooth 24-hour cycle
   ];
 

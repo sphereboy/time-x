@@ -22,7 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import timezones, {
   getTimezoneName,
   getTimezoneAbbr,
-  getTimezoneOffset,
+  Timezone,
 } from "@/lib/timezones";
 
 interface AddLocationDialogProps {
@@ -65,6 +65,15 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
         input.placeholder = funnyName;
       }
     }, 0);
+  };
+
+  const getTimezoneOffset = (timezone: Timezone): number => {
+    const now = new Date();
+    const tzDate = new Date(
+      now.toLocaleString("en-US", { timeZone: timezone.utc[0] })
+    );
+    const tzOffset = (tzDate.getTime() - now.getTime()) / (60 * 60 * 1000);
+    return Math.round(tzOffset);
   };
 
   const handleAddLocation = () => {
