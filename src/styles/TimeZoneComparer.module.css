@@ -56,6 +56,76 @@
   height: 100vh;
 }
 
+/* Update the media query for mobile devices */
+@media (max-width: 767px) {
+  .container {
+    height: 100vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .timezonesContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  .timezoneColumn {
+    flex: 0 0 50%; /* Set each column to take up 50% of the viewport height */
+    min-height: 50vh;
+    height: 50vh;
+    overflow-y: auto;
+  }
+
+  .timeContent {
+    padding-top: 2vh; /* Further reduce top padding for mobile */
+    padding-bottom: 2vh; /* Further reduce bottom padding for mobile */
+  }
+
+  .addButton {
+    top: 10px;
+    left: 10px;
+    position: fixed;
+    z-index: 1000;
+  }
+
+  .actionButtons {
+    top: 10px;
+    right: 10px;
+    position: fixed;
+    z-index: 1000;
+  }
+
+  /* Adjust font sizes for smaller screens */
+  .hours,
+  .minutes,
+  .colon,
+  .hourInput,
+  .placeholderHour {
+    font-size: 1.8rem;
+  }
+
+  .date {
+    font-size: 0.8rem;
+  }
+
+  .location {
+    font-size: 0.7rem;
+  }
+
+  .timezone {
+    font-size: 0.6rem;
+  }
+
+  .secondaryLabels {
+    font-size: 0.6rem;
+  }
+
+  .offset {
+    font-size: 0.6rem;
+  }
+}
+
 .timezoneColumn {
   flex: 1;
   display: flex;
@@ -324,7 +394,7 @@
   .colon,
   .hourInput,
   .placeholderHour {
-    font-size: 4rem;
+    font-size: 3rem; /* Slightly reduce font size for tablets */
   }
 }
 
@@ -368,7 +438,7 @@
   .colon,
   .hourInput,
   .placeholderHour {
-    font-size: 5rem;
+    font-size: 4rem;
   }
 }
 

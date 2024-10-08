@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { format, addHours, setHours, differenceInHours } from "date-fns";
-import { Plus, Trash2, Home, X, Edit2 } from "lucide-react";
+import { Plus, Trash2, Home } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
@@ -267,15 +267,6 @@ export function TimeZoneComparer(): React.ReactElement {
     [locations, removeLocation]
   );
 
-  const handleEditLabel = (
-    locationId: string,
-    index: number,
-    currentLabel: string
-  ) => {
-    setEditingLabel({ id: locationId, index });
-    setLabelInputValue(currentLabel);
-  };
-
   const handleLabelChange = (locationId: string, index: number) => {
     const location = locations.find((loc) => loc.id === locationId);
     if (location) {
@@ -290,16 +281,6 @@ export function TimeZoneComparer(): React.ReactElement {
     }
     setEditingLabel(null);
     setLabelInputValue("");
-  };
-
-  const handleDeleteLabel = (locationId: string, index: number) => {
-    const location = locations.find((loc) => loc.id === locationId);
-    if (location && location.secondaryLabels) {
-      const updatedLabels = location.secondaryLabels.filter(
-        (_, i) => i !== index
-      );
-      updateLocation(locationId, { secondaryLabels: updatedLabels });
-    }
   };
 
   const handleLabelClick = (
