@@ -1,4 +1,5 @@
 import React, { useState, ReactNode } from "react";
+import { v4 as uuidv4 } from "uuid";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +19,11 @@ import {
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import timezones, { getTimezoneName, getTimezoneAbbr } from "@/lib/timezones";
+import timezones, {
+  getTimezoneName,
+  getTimezoneAbbr,
+  getTimezoneOffset,
+} from "@/lib/timezones";
 
 interface AddLocationDialogProps {
   onAdd: () => void;
@@ -45,7 +50,7 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedTimezone, setSelectedTimezone] = useState<string>("");
   const [locationName, setLocationName] = useState<string>("");
-  const { addLocation, updateLocation, locations } = useTimeZoneStore();
+  const { addLocation, locations } = useTimeZoneStore();
 
   const handleTimezoneChange = (value: string) => {
     setSelectedTimezone(value);
@@ -62,37 +67,23 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
     }, 0);
   };
 
-  const handleAdd = () => {
+  const handleAddLocation = () => {
     if (selectedTimezone) {
       const timezone = timezones.find((tz) => tz.value === selectedTimezone);
       if (timezone) {
-        const existingLocation = locations.find(
-          (loc) => loc.label === getTimezoneAbbr(timezone)
-        );
-
-        if (existingLocation) {
-          // Add new label to existing location
-          const newLabel = locationName || getTimezoneName(timezone);
-          updateLocation(existingLocation.id, {
-            secondaryLabels: [
-              ...(existingLocation.secondaryLabels || []),
-              newLabel,
-            ],
-          });
-        } else {
-          // Add new location
-          addLocation({
-            id: Date.now().toString(),
-            name: locationName || getTimezoneName(timezone),
-            offset: timezone.offset,
-            label: getTimezoneAbbr(timezone),
-          });
-        }
-
-        onAdd();
+        const offset = getTimezoneOffset(timezone);
+        const newLocation = {
+          id: uuidv4(),
+          timezone: selectedTimezone,
+          label: locationName || getTimezoneAbbr(timezone),
+          offset: offset,
+          name: getTimezoneName(timezone),
+        };
+        addLocation(newLocation);
         setOpen(false);
         setSelectedTimezone("");
         setLocationName("");
+        onAdd();
       }
     }
   };
@@ -126,7 +117,7 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
             onChange={(e) => setLocationName(e.target.value)}
           />
         </div>
-        <Button onClick={handleAdd}>
+        <Button onClick={handleAddLocation}>
           {locations.some(
             (loc) =>
               loc.label ===

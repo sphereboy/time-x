@@ -6,6 +6,7 @@ import { Plus, Trash2, Home } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
+import timezones, { getTimezoneOffset } from "@/lib/timezones";
 
 const getBackgroundColor = (hour: number): string => {
   const colors = [
@@ -126,13 +127,18 @@ export function TimeZoneComparer(): React.ReactElement {
     if (currentTime) {
       const currentLocation = locations.find((loc) => loc.isCurrent);
       if (currentLocation) {
-        const offset = -currentTime.getTimezoneOffset() / 60;
-        if (currentLocation.offset !== offset) {
-          updateLocation("current", {
-            offset,
-            name: "Current Location",
-            label: currentTimezone,
-          });
+        const currentTimezoneData = timezones.find((tz) =>
+          tz.utc.includes(currentTimezone)
+        );
+        if (currentTimezoneData) {
+          const offset = getTimezoneOffset(currentTimezoneData);
+          if (currentLocation.offset !== offset) {
+            updateLocation("current", {
+              offset,
+              name: "Current Location",
+              label: currentTimezone,
+            });
+          }
         }
       }
     }
@@ -231,6 +237,11 @@ export function TimeZoneComparer(): React.ReactElement {
     [locations, removeLocation]
   );
 
+  const getAdjustedTime = (baseTime: Date, offset: number) => {
+    const utcTime = baseTime.getTime() + baseTime.getTimezoneOffset() * 60000;
+    return new Date(utcTime + offset * 3600000);
+  };
+
   if (!currentTime) {
     return <div>Loading...</div>; // Or any loading indicator
   }
@@ -244,8 +255,8 @@ export function TimeZoneComparer(): React.ReactElement {
       </AddLocationDialog>
       <div className={styles.timezonesContainer}>
         {locations.map((location) => {
-          const localTime = addHours(currentTime, location.offset);
-          const localHour = parseInt(format(localTime, "H"), 10);
+          const adjustedTime = getAdjustedTime(currentTime, location.offset);
+          const localHour = parseInt(format(adjustedTime, "H"), 10);
           const backgroundColor = getBackgroundColor(localHour);
           const isCurrentTimezone = location.label === currentTimezone;
           const textColor = isLightColor(backgroundColor) ? "#393939" : "white";
@@ -290,7 +301,7 @@ export function TimeZoneComparer(): React.ReactElement {
                           />
                           {!inputValue && (
                             <div className={styles.placeholderHour}>
-                              {format(localTime, "HH")}
+                              {format(adjustedTime, "HH")}
                             </div>
                           )}
                         </>
@@ -302,7 +313,7 @@ export function TimeZoneComparer(): React.ReactElement {
                             setInputValue("");
                           }}
                         >
-                          {format(localTime, "HH")}
+                          {format(adjustedTime, "HH")}
                         </div>
                       )}
                     </div>
@@ -316,12 +327,12 @@ export function TimeZoneComparer(): React.ReactElement {
                       </div>
                     </div>
                     <div className={styles.minutes}>
-                      {format(localTime, "mm")}
+                      {format(adjustedTime, "mm")}
                     </div>
                   </div>
                 </div>
                 <div className={styles.date}>
-                  {format(localTime, "EEE. do")}
+                  {format(adjustedTime, "EEE. do")}
                 </div>
                 <div className={styles.location}>{location.name}</div>
                 <div className={styles.timezone}>{location.label}</div>
@@ -349,7 +360,8 @@ export function TimeZoneComparer(): React.ReactElement {
                 <div className={styles.offset}>{location.offset}</div>
                 {isCurrentTimezone && (
                   <div className={styles.utcReference}>
-                    {format(addHours(localTime, -location.offset), "HH:mm")} UTC
+                    {format(addHours(adjustedTime, -location.offset), "HH:mm")}{" "}
+                    UTC
                   </div>
                 )}
               </div>

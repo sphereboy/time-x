@@ -36,3 +36,14 @@ export function getTimezoneOffsetString(
   const minutes = ((absOffset % 1) * 60).toString().padStart(2, "0");
   return `UTC${sign}${hours}:${minutes}`;
 }
+
+// Utility function to get the UTC offset, including DST
+export function getTimezoneOffset(timezone: Timezone): number {
+  const now = new Date();
+  const utcDate = new Date(now.toUTCString());
+  const tzDate = new Date(
+    now.toLocaleString("en-US", { timeZone: timezone.utc[0] })
+  );
+  const diff = (tzDate.getTime() - utcDate.getTime()) / 3600000;
+  return Math.round(diff);
+}
