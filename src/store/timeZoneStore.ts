@@ -32,37 +32,10 @@ const getCurrentTimezone = (): Location => {
   };
 };
 
-const initialLocations: Location[] = [
-  { id: "1", name: "Los Angeles, USA", offset: -10, label: "PDT" },
-  { id: "2", name: "Guadalajara, MEX", offset: -8, label: "CDT" },
-  { id: "3", name: "Miami, USA", offset: -7, label: "EDT" },
-  { id: "4", name: "Indrek P", offset: -3, label: "GMT" },
-  {
-    id: "5",
-    name: "Lisbon, PRT",
-    offset: -2,
-    label: "WEST",
-    secondaryLabels: ["London, GBR (BST)"],
-  },
-  {
-    id: "6",
-    name: "Tartu, EST",
-    offset: 0,
-    label: "EEST",
-    secondaryLabels: ["Estonia (EEST)", "Eyüp (+03)"],
-  },
-  { id: "7", name: "Cebu", offset: 5, label: "PST" },
-];
-
-// Remove any 'current' location from initialLocations
-const filteredInitialLocations = initialLocations.filter(
-  (loc) => loc.id !== "current"
-);
-
 export const useTimeZoneStore = create<TimeZoneState>()(
   persist(
     (set, get) => ({
-      locations: [getCurrentTimezone(), ...filteredInitialLocations],
+      locations: [getCurrentTimezone()], // Initialize with only the current timezone
       currentTime: new Date(),
       addLocation: (location) =>
         set((state) => {
@@ -73,27 +46,31 @@ export const useTimeZoneStore = create<TimeZoneState>()(
       removeLocation: (id) =>
         set((state) => ({
           locations: state.locations.filter((loc) => {
-            // Keep the location if it's not the one to be removed
-            // or if it's the current timezone (isCurrent is true)
             return loc.id !== id || loc.isCurrent;
           }),
         })),
       updateLocation: (id, updates) =>
-        set((state) => ({
-          locations: state.locations.map((loc) =>
-            loc.id === id ? { ...loc, ...updates } : loc
-          ),
-        })),
+        set((state) => {
+          const location = state.locations.find((loc) => loc.id === id);
+          if (!location) return state;
+          const updatedLocation = { ...location, ...updates };
+          if (JSON.stringify(location) === JSON.stringify(updatedLocation)) {
+            return state;
+          }
+          return {
+            locations: state.locations.map((loc) =>
+              loc.id === id ? updatedLocation : loc
+            ),
+          };
+        }),
       setCurrentTime: (time) => set({ currentTime: time }),
       initializeWithCurrentTimezone: () => {
         const { locations } = get();
-        const currentLocation = locations.find((loc) => loc.isCurrent);
-        if (!currentLocation) {
+        if (locations.length === 0) {
+          set({ locations: [getCurrentTimezone()] });
+        } else if (!locations.some((loc) => loc.isCurrent)) {
           set((state) => ({
-            locations: [
-              getCurrentTimezone(),
-              ...state.locations.filter((loc) => !loc.isCurrent),
-            ],
+            locations: [getCurrentTimezone(), ...state.locations],
           }));
         }
       },

@@ -1,5 +1,5 @@
-import React, { useState, ReactNode } from "react";
-import { v4 as uuidv4 } from "uuid";
+import React, { useState } from "react";
+import { useTimeZoneStore } from "@/store/timeZoneStore";
 import {
   Dialog,
   DialogContent,
@@ -16,83 +16,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-import timezones, {
-  getTimezoneName,
-  getTimezoneAbbr,
-  Timezone,
-} from "@/lib/timezones";
+import timezones, { getTimezoneName, getTimezoneAbbr } from "@/lib/timezones";
 
 interface AddLocationDialogProps {
-  onAdd: () => void;
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
-const getFunnyName = (timezone: string): string => {
-  const funnyNames: { [key: string]: string } = {
-    "Pacific Standard Time": "Surfer's Paradise",
-    "Mountain Standard Time": "Rocky Mountain High",
-    "Central Standard Time": "Cornfield Central",
-    "Eastern Standard Time": "Big Apple Time",
-    "Greenwich Mean Time": "Tea Time Central",
-    "Central European Time": "Schnitzel Standard Time",
-    "Eastern European Time": "Tzatziki Time Zone",
-    "Japan Standard Time": "Sushi Standard Time",
-    "Australian Eastern Standard Time": "Kangaroo Klock",
-  };
-
-  return funnyNames[timezone] || `Quirky ${timezone.split(" ")[0]} Time`;
-};
-
-export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
+export function AddLocationDialog({ children }: AddLocationDialogProps) {
   const [open, setOpen] = useState(false);
-  const [selectedTimezone, setSelectedTimezone] = useState<string>("");
-  const [locationName, setLocationName] = useState<string>("");
-  const { addLocation, locations } = useTimeZoneStore();
+  const [selectedTimezone, setSelectedTimezone] = useState("");
+  const [locationName, setLocationName] = useState("");
+  const addLocation = useTimeZoneStore((state) => state.addLocation);
+  const locations = useTimeZoneStore((state) => state.locations);
 
   const handleTimezoneChange = (value: string) => {
     setSelectedTimezone(value);
-    const timezone = timezones.find((tz) => tz.value === value);
-    const funnyName = getFunnyName(getTimezoneName(timezone));
-    setLocationName("");
-    setTimeout(() => {
-      const input = document.getElementById(
-        "locationNameInput"
-      ) as HTMLInputElement;
-      if (input) {
-        input.placeholder = funnyName;
+    // If no location name is set, use the timezone name as the default
+    if (!locationName) {
+      const timezone = timezones.find((tz) => tz.value === value);
+      if (timezone) {
+        setLocationName(getTimezoneName(timezone));
       }
-    }, 0);
-  };
-
-  const getTimezoneOffset = (timezone: Timezone): number => {
-    const now = new Date();
-    const tzDate = new Date(
-      now.toLocaleString("en-US", { timeZone: timezone.utc[0] })
-    );
-    const tzOffset = (tzDate.getTime() - now.getTime()) / (60 * 60 * 1000);
-    return Math.round(tzOffset);
+    }
   };
 
   const handleAddLocation = () => {
     if (selectedTimezone) {
       const timezone = timezones.find((tz) => tz.value === selectedTimezone);
       if (timezone) {
-        const offset = getTimezoneOffset(timezone);
         const newLocation = {
-          id: uuidv4(),
-          timezone: selectedTimezone,
-          label: locationName || getTimezoneAbbr(timezone),
-          offset: offset,
-          name: getTimezoneName(timezone),
+          id: Date.now().toString(),
+          name: locationName || getTimezoneName(timezone), // Use timezone name if no custom name is provided
+          offset: 0, // This will be calculated dynamically in TimeZoneComparer
+          label: getTimezoneAbbr(timezone),
         };
         addLocation(newLocation);
         setOpen(false);
         setSelectedTimezone("");
         setLocationName("");
-        onAdd();
       }
     }
   };
@@ -121,12 +84,15 @@ export function AddLocationDialog({ onAdd, children }: AddLocationDialogProps) {
           </Select>
           <Input
             id="locationNameInput"
-            placeholder="Location Name"
+            placeholder="Location Name (optional)"
             value={locationName}
             onChange={(e) => setLocationName(e.target.value)}
           />
         </div>
-        <Button onClick={handleAddLocation}>
+        <Button
+          onClick={handleAddLocation}
+          disabled={!selectedTimezone} // Only disable if no timezone is selected
+        >
           {locations.some(
             (loc) =>
               loc.label ===

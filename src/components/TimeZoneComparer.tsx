@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { format, addHours, setHours, differenceInHours } from "date-fns";
+import { getTimezoneOffset } from "date-fns-tz";
 import { Plus, Trash2, Home } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
-import timezones, { getTimezoneOffset } from "@/lib/timezones";
+import timezones from "@/lib/timezones";
 
 const getBackgroundColor = (hour: number): string => {
   const colors = [
@@ -93,12 +94,12 @@ export function TimeZoneComparer(): React.ReactElement {
     removeLocation,
     updateLocation,
     initializeWithCurrentTimezone,
+    // Remove the addLocation import since it's no longer needed here
   } = useTimeZoneStore();
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   const [editingHour, setEditingHour] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState<string>("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const [manualAdjustment, setManualAdjustment] = useState(false);
   const [editingLabel, setEditingLabel] = useState<{
     id: string;
     index: number;
@@ -123,43 +124,61 @@ export function TimeZoneComparer(): React.ReactElement {
     return () => clearInterval(colonInterval);
   }, []);
 
-  // Initialize with current timezone if it doesn't exist
   useEffect(() => {
     initializeWithCurrentTimezone();
   }, [initializeWithCurrentTimezone]);
 
-  // Set initial time and update it every second
   useEffect(() => {
-    setCurrentTime(new Date());
-    const timer = setInterval(() => {
-      if (!manualAdjustment) {
-        setCurrentTime(new Date());
-      }
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [manualAdjustment]);
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(now);
+    };
 
-  // Update the current timezone's offset
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const getAdjustedTime = useCallback((baseTime: Date, offset: number) => {
+    const localOffset = baseTime.getTimezoneOffset();
+    const targetOffset = offset * 60;
+    return new Date(baseTime.getTime() + (targetOffset + localOffset) * 60000);
+  }, []);
+
   useEffect(() => {
     if (currentTime) {
-      const currentLocation = locations.find((loc) => loc.isCurrent);
-      if (currentLocation) {
-        const currentTimezoneData = timezones.find((tz) =>
-          tz.utc.includes(currentTimezone)
+      const updatedLocations = locations.map((location) => {
+        const locationTimezone = timezones.find((tz) =>
+          location.label ? tz.utc.includes(location.label) : false
         );
-        if (currentTimezoneData) {
-          const offset = getTimezoneOffset(currentTimezoneData);
-          if (currentLocation.offset !== offset) {
-            updateLocation("current", {
-              offset,
-              name: "Current Location",
-              label: currentTimezone,
-            });
-          }
+        if (locationTimezone) {
+          const offset =
+            getTimezoneOffset(locationTimezone.utc[0], currentTime) / 60;
+          return {
+            ...location,
+            offset: offset,
+          };
         }
-      }
+        return location;
+      });
+
+      // Update locations in the store, but only if they've changed
+      updatedLocations.forEach((updatedLocation) => {
+        const existingLocation = locations.find(
+          (loc) => loc.id === updatedLocation.id
+        );
+        if (
+          existingLocation &&
+          existingLocation.offset !== updatedLocation.offset
+        ) {
+          updateLocation(updatedLocation.id, {
+            offset: updatedLocation.offset,
+          });
+        }
+      });
     }
-  }, [locations, updateLocation, currentTime, currentTimezone]);
+  }, [currentTime, locations, updateLocation]);
 
   useEffect(() => {
     if (editingHour && inputRef.current) {
@@ -173,10 +192,13 @@ export function TimeZoneComparer(): React.ReactElement {
     }
   }, [editingLabel]);
 
-  const handleAddLocation = useCallback((): void => {
-    // This function will be passed to AddLocationDialog
-    // It can be used to perform any actions after a location is added
-  }, []);
+  // Remove the handleAddLocation function
+  // const handleAddLocation = useCallback(
+  //   (newLocation: Location) => {
+  //     addLocation(newLocation);
+  //   },
+  //   [addLocation]
+  // );
 
   const handleHourChange = useCallback(
     (locationId: string, newHour: string) => {
@@ -189,7 +211,6 @@ export function TimeZoneComparer(): React.ReactElement {
           const timeDiff = differenceInHours(newLocalTime, localTime);
           const newGlobalTime = addHours(currentTime, timeDiff);
           setCurrentTime(newGlobalTime);
-          setManualAdjustment(true);
         }
       }
       setEditingHour(null);
@@ -227,7 +248,6 @@ export function TimeZoneComparer(): React.ReactElement {
           const newGlobalTime = addHours(currentTime, timeDiff);
           setCurrentTime(newGlobalTime);
           setInputValue(newHour.toString().padStart(2, "0"));
-          setManualAdjustment(true);
         }
       }
     },
@@ -292,20 +312,15 @@ export function TimeZoneComparer(): React.ReactElement {
     setLabelInputValue(currentLabel);
   };
 
-  const getAdjustedTime = (baseTime: Date, offset: number) => {
-    const utcTime = baseTime.getTime() + baseTime.getTimezoneOffset() * 60000;
-    return new Date(utcTime + offset * 3600000);
-  };
-
   if (!currentTime) {
     return <div>Loading...</div>; // Or any loading indicator
   }
 
   return (
     <div className={styles.container}>
-      <AddLocationDialog onAdd={handleAddLocation}>
+      <AddLocationDialog>
         <button className={styles.addButton} aria-label="Add location">
-          <Plus size={24} />
+          <Plus />
         </button>
       </AddLocationDialog>
       <div className={styles.timezonesContainer}>
@@ -469,10 +484,14 @@ export function TimeZoneComparer(): React.ReactElement {
           );
         })}
       </div>
-      <div className={styles.actionButtons}>
-        <button className={styles.actionButton}>👤</button>
-        <button className={styles.actionButton}>💬</button>
-      </div>
+      {locations.length === 1 && (
+        <div className={styles.addLocationPrompt}>
+          <p>Add more locations to compare timezones</p>
+          <AddLocationDialog>
+            <button className={styles.addButton}>Add Location</button>
+          </AddLocationDialog>
+        </div>
+      )}
     </div>
   );
 }
