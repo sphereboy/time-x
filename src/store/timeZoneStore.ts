@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
-import { timeZoneMapping } from "@/components/TimeZoneComparer";
+import { TimeZoneLocation } from "@/types/Location";
 
 // Remove the import of zonedTimeToUtc
 
@@ -15,28 +15,19 @@ const getTimezoneOffset = (timeZone: string): number => {
   return (tzDate.getTime() - utcDate.getTime()) / 60000;
 };
 
-interface Location {
-  id: string;
-  name: string;
-  offset: number;
-  label?: string;
-  secondaryLabels?: string[];
-  isCurrent?: boolean;
-}
-
 interface TimeZoneState {
-  locations: Location[];
+  locations: TimeZoneLocation[];
   currentTime: Date;
   addLocation: (name: string, label: string) => void;
   removeLocation: (id: string) => void;
-  updateLocation: (id: string, updates: Partial<Location>) => void;
+  updateLocation: (id: string, updates: Partial<TimeZoneLocation>) => void;
   setCurrentTime: (time: Date) => void;
   initializeWithCurrentTimezone: () => void;
   resetToCurrentTimezone: () => void;
-  sortLocations: (locations: Location[]) => Location[];
+  sortLocations: (locations: TimeZoneLocation[]) => TimeZoneLocation[];
 }
 
-const getCurrentTimezone = (): Location => {
+const getCurrentTimezone = (): TimeZoneLocation => {
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   return {
     id: "current",
@@ -60,7 +51,7 @@ export const useTimeZoneStore = create<TimeZoneState>()(
             return state; // Return the current state without changes
           }
 
-          const newLocation = {
+          const newLocation: TimeZoneLocation = {
             id: uuidv4(),
             name,
             label,
@@ -78,7 +69,7 @@ export const useTimeZoneStore = create<TimeZoneState>()(
           ),
         }));
       },
-      updateLocation: (id: string, updates: Partial<Location>) => {
+      updateLocation: (id: string, updates: Partial<TimeZoneLocation>) => {
         set((state) => ({
           locations: state.sortLocations(
             state.locations.map((loc) =>
@@ -102,7 +93,7 @@ export const useTimeZoneStore = create<TimeZoneState>()(
         const currentTimezone = getCurrentTimezone();
         set({ locations: [currentTimezone] });
       },
-      sortLocations: (locations: Location[]) => {
+      sortLocations: (locations: TimeZoneLocation[]) => {
         const homeLocation = locations.find((loc) => loc.isCurrent);
         if (!homeLocation) return locations;
 

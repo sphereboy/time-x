@@ -34,7 +34,7 @@ export function AddLocationDialog({ children }: AddLocationDialogProps) {
   const availableTimezones = useMemo(() => {
     const existingLabels = new Set(locations.map((loc) => loc.label));
     return Object.entries(timeZoneMapping).filter(
-      ([_, value]) => !existingLabels.has(value)
+      ([, value]) => !existingLabels.has(value)
     );
   }, [locations]);
 

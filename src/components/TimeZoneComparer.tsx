@@ -6,7 +6,7 @@ import { Plus, Trash2, Home, RotateCcw } from "lucide-react"; // Add RotateCcw i
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
-import timezones from "@/lib/timezones";
+import { TimeZoneLocation } from "@/types/Location";
 
 // Remove the import of zonedTimeToUtc and utcToZonedTime
 
@@ -105,7 +105,7 @@ const isValidTimeZone = (timeZone: string): boolean => {
     Intl.DateTimeFormat(undefined, { timeZone: mappedTimeZone });
     return true;
   } catch (error) {
-    console.warn(`Invalid time zone: ${timeZone}`);
+    console.warn(`Invalid time zone: ${timeZone}`, error);
     return false;
   }
 };
@@ -173,7 +173,10 @@ export function TimeZoneComparer(): React.ReactElement {
         baseTime.toLocaleString("en-US", { timeZone: mappedTimeZone })
       );
     } catch (error) {
-      console.warn(`Invalid time zone: ${timeZone}. Using local time instead.`);
+      console.warn(
+        `Invalid time zone: ${timeZone}. Using local time instead.`,
+        error
+      );
       return new Date(baseTime);
     }
   }, []);
@@ -189,7 +192,8 @@ export function TimeZoneComparer(): React.ReactElement {
       }).format(date);
     } catch (error) {
       console.warn(
-        `Invalid time zone: ${timeZone}. Using local time format instead.`
+        `Invalid time zone: ${timeZone}. Using local time format instead.`,
+        error
       );
       return date.toLocaleTimeString("en-US", {
         hour: "2-digit",
@@ -309,7 +313,7 @@ export function TimeZoneComparer(): React.ReactElement {
   }, [resetToCurrentTimezone]);
 
   // Modify the sortLocations function
-  const sortLocations = useCallback((locations: Location[]) => {
+  const sortLocations = useCallback((locations: TimeZoneLocation[]) => {
     const homeLocation = locations.find((loc) => loc.isCurrent);
     if (!homeLocation) return locations;
 
