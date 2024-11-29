@@ -156,6 +156,7 @@ export function TimeZoneComparer(): React.ReactElement {
     value: string;
   } | null>(null);
   const [showColon, setShowColon] = useState(true);
+  const [isManuallyAdjusted, setIsManuallyAdjusted] = useState(false);
 
   // Initialize timezone once
   useEffect(() => {
@@ -165,15 +166,17 @@ export function TimeZoneComparer(): React.ReactElement {
   // Update time every second
   useEffect(() => {
     const updateTime = () => {
-      const newTime = new Date();
-      setLocalCurrentTime(newTime);
-      setCurrentTime(newTime);
+      if (!isManuallyAdjusted) {
+        const newTime = new Date();
+        setLocalCurrentTime(newTime);
+        setCurrentTime(newTime);
+      }
     };
 
     updateTime();
     const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
-  }, [setCurrentTime]);
+  }, [setCurrentTime, isManuallyAdjusted]);
 
   // Blink colon
   useEffect(() => {
@@ -228,6 +231,7 @@ export function TimeZoneComparer(): React.ReactElement {
         newDate.setHours(parsedHour);
         setLocalCurrentTime(newDate);
         setCurrentTime(newDate);
+        setIsManuallyAdjusted(true);
       }
       setEditingHour(null);
       setInputValue("");
@@ -324,13 +328,39 @@ export function TimeZoneComparer(): React.ReactElement {
     setLabelInputValue(currentLabel);
   };
 
+  // Add this new handler for resetting only the time
+  const handleTimeReset = useCallback(() => {
+    const newTime = new Date();
+    setLocalCurrentTime(newTime);
+    setCurrentTime(newTime);
+    setIsManuallyAdjusted(false);
+  }, [setCurrentTime]);
+
   // Add this function to handle resetting
   const handleReset = useCallback(() => {
     resetToCurrentTimezone();
-  }, [resetToCurrentTimezone]);
+    setIsManuallyAdjusted(false);
+    const newTime = new Date();
+    setLocalCurrentTime(newTime);
+    setCurrentTime(newTime);
+  }, [resetToCurrentTimezone, setCurrentTime]);
 
   // Memoize sorted locations to prevent unnecessary re-renders
   const sortedLocations = useMemo(() => locations, [locations]);
+
+  const hourInputStyles = {
+    width: "2ch",
+    background: "transparent",
+    border: "none",
+    color: "inherit",
+    fontSize: "inherit",
+    fontFamily: "inherit",
+    textAlign: "center" as const,
+    padding: 0,
+    outline: "none",
+    position: "relative" as const,
+    zIndex: 2,
+  };
 
   if (!currentTime) {
     return <div>Loading...</div>;
@@ -344,10 +374,19 @@ export function TimeZoneComparer(): React.ReactElement {
             <Plus size={20} />
           </button>
         </AddLocationDialog>
+        {isManuallyAdjusted && (
+          <button
+            className={styles.resetTimeButton}
+            onClick={handleTimeReset}
+            aria-label="Reset to current time"
+          >
+            Reset Time
+          </button>
+        )}
         <button
           className={styles.resetButton}
           onClick={handleReset}
-          aria-label="Reset to current time"
+          aria-label="Reset locations"
         >
           <RotateCcw size={20} />
         </button>
@@ -390,7 +429,7 @@ export function TimeZoneComparer(): React.ReactElement {
                   <div className={styles.hourMinuteWrapper}>
                     <div className={styles.hourInputWrapper}>
                       {editingHour === location.id ? (
-                        <>
+                        <div style={{ position: "relative" }}>
                           <input
                             type="text"
                             value={inputValue}
@@ -399,15 +438,16 @@ export function TimeZoneComparer(): React.ReactElement {
                               handleHourChange(location.id, inputValue)
                             }
                             onKeyDown={(e) => handleKeyDown(e, location.id)}
-                            className={styles.hourInput}
+                            style={hourInputStyles}
                             maxLength={2}
+                            autoFocus
                           />
                           {!inputValue && (
                             <div className={styles.placeholderHour}>
                               {hours}
                             </div>
                           )}
-                        </>
+                        </div>
                       ) : (
                         <div
                           className={styles.hours}

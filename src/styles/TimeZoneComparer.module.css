@@ -260,38 +260,46 @@
   background-color: #ffcccb;
 }
 
-.hourInput {
-  font-size: 2.5rem;
-  font-weight: bold;
-  width: 3ch;
-  background: transparent;
-  border: none;
-  color: inherit;
-  text-align: center;
+.hourInputWrapper {
   position: relative;
-  z-index: 2;
-  padding: 0;
-  margin: 0;
-  line-height: 1;
-  vertical-align: baseline;
-}
-
-.hourInput:focus {
-  outline: none;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.5);
+  display: inline-block;
+  min-width: 2ch;
+  text-align: center;
 }
 
 .placeholderHour {
+  opacity: 0.5;
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 1;
+}
+
+.hours {
+  cursor: pointer;
+  min-width: 2ch;
+  text-align: center;
+}
+
+.resetTimeButton {
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(5px);
+}
+
+.resetTimeButton:hover {
+  background-color: rgba(255, 255, 255, 0.3);
 }
 
 .deleteIconWrapper {
@@ -545,6 +553,7 @@
   display: flex;
   gap: 10px;
   z-index: 10;
+  align-items: center;
 }
 
 .addButton,
