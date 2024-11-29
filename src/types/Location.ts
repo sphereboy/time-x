@@ -1,8 +1,13 @@
 export interface TimeZoneLocation {
   id: string;
-  label: string;
   name: string;
+  label: string;
+  offset: number;
   isCurrent: boolean;
   secondaryLabels?: string[];
-  offset?: number; // Add this to match the existing usage
+}
+
+export interface MetadataProps {
+  title?: string;
+  description?: string;
 }

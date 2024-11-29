@@ -1,5 +1,9 @@
 import dynamic from "next/dynamic";
 
+export const metadata = {
+  title: "Time-X | Compare Time Zones",
+};
+
 const TimeZoneComparer = dynamic(
   () =>
     import("@/components/TimeZoneComparer").then((mod) => mod.TimeZoneComparer),
