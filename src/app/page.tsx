@@ -1,4 +1,10 @@
-import { TimeZoneComparer } from "@/components/TimeZoneComparer";
+import dynamic from "next/dynamic";
+
+const TimeZoneComparer = dynamic(
+  () =>
+    import("@/components/TimeZoneComparer").then((mod) => mod.TimeZoneComparer),
+  { ssr: false }
+);
 
 export default function Home() {
   return (

@@ -3,11 +3,6 @@ import { persist } from "zustand/middleware";
 import { v4 as uuidv4 } from "uuid";
 import { TimeZoneLocation } from "@/types/Location";
 
-// Remove the import of zonedTimeToUtc
-
-// ... (keep the rest of the imports and interfaces)
-
-// Add this function to calculate timezone offset
 const getTimezoneOffset = (timeZone: string): number => {
   const date = new Date();
   const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
@@ -27,16 +22,13 @@ interface TimeZoneState {
   sortLocations: (locations: TimeZoneLocation[]) => TimeZoneLocation[];
 }
 
-const getCurrentTimezone = (): TimeZoneLocation => {
-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  return {
-    id: "current",
-    name: "Current Location",
-    offset: 0, // This will be calculated dynamically
-    label: timezone,
-    isCurrent: true,
-  };
-};
+const getCurrentTimezone = (): TimeZoneLocation => ({
+  id: "current",
+  name: "Current Location",
+  offset: 0,
+  label: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  isCurrent: true,
+});
 
 export const useTimeZoneStore = create<TimeZoneState>()(
   persist(
@@ -45,10 +37,8 @@ export const useTimeZoneStore = create<TimeZoneState>()(
       currentTime: new Date(),
       addLocation: (name: string, label: string) => {
         set((state) => {
-          // Check if the location already exists
           if (state.locations.some((loc) => loc.label === label)) {
-            console.warn(`Location with label ${label} already exists.`);
-            return state; // Return the current state without changes
+            return state;
           }
 
           const newLocation: TimeZoneLocation = {
@@ -59,25 +49,23 @@ export const useTimeZoneStore = create<TimeZoneState>()(
             isCurrent: false,
           };
           const updatedLocations = [...state.locations, newLocation];
-          return { locations: state.sortLocations(updatedLocations) };
+          return { locations: get().sortLocations(updatedLocations) };
         });
       },
-      removeLocation: (id: string) => {
+      removeLocation: (id: string) =>
         set((state) => ({
-          locations: state.sortLocations(
+          locations: get().sortLocations(
             state.locations.filter((loc) => loc.id !== id)
           ),
-        }));
-      },
-      updateLocation: (id: string, updates: Partial<TimeZoneLocation>) => {
+        })),
+      updateLocation: (id: string, updates: Partial<TimeZoneLocation>) =>
         set((state) => ({
-          locations: state.sortLocations(
+          locations: get().sortLocations(
             state.locations.map((loc) =>
               loc.id === id ? { ...loc, ...updates } : loc
             )
           ),
-        }));
-      },
+        })),
       setCurrentTime: (time: Date) => set({ currentTime: time }),
       initializeWithCurrentTimezone: () => {
         const { locations } = get();
@@ -90,19 +78,16 @@ export const useTimeZoneStore = create<TimeZoneState>()(
         }
       },
       resetToCurrentTimezone: () => {
-        const currentTimezone = getCurrentTimezone();
-        set({ locations: [currentTimezone] });
+        set({ locations: [getCurrentTimezone()] });
       },
       sortLocations: (locations: TimeZoneLocation[]) => {
         const homeLocation = locations.find((loc) => loc.isCurrent);
         if (!homeLocation) return locations;
 
         const homeOffset = getTimezoneOffset(homeLocation.label || "UTC");
-
-        return locations.sort((a, b) => {
+        return [...locations].sort((a, b) => {
           const aOffset = getTimezoneOffset(a.label || "UTC") - homeOffset;
           const bOffset = getTimezoneOffset(b.label || "UTC") - homeOffset;
-
           return aOffset - bOffset;
         });
       },
@@ -112,7 +97,7 @@ export const useTimeZoneStore = create<TimeZoneState>()(
       partialize: (state) => ({
         locations: state.locations.map((loc) => ({
           ...loc,
-          offset: 0, // Reset offset to avoid storing calculated values
+          offset: 0,
         })),
       }),
     }

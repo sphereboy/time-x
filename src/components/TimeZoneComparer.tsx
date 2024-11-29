@@ -2,13 +2,11 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
-import { Plus, Trash2, Home, RotateCcw } from "lucide-react"; // Add RotateCcw import
+import { Plus, Trash2, Home, RotateCcw } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
 import { TimeZoneLocation } from "@/types/Location";
-
-// Remove the import of zonedTimeToUtc and utcToZonedTime
 
 // Update this object to only include the working time zones
 export const timeZoneMapping: { [key: string]: string } = {
@@ -125,8 +123,9 @@ export function TimeZoneComparer(): React.ReactElement {
     updateLocation,
     initializeWithCurrentTimezone,
     setCurrentTime,
-    resetToCurrentTimezone, // Add this line
+    resetToCurrentTimezone,
   } = useTimeZoneStore();
+
   const [currentTime, setLocalCurrentTime] = useState<Date>(new Date());
   const [editingHour, setEditingHour] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState<string>("");
@@ -141,10 +140,12 @@ export function TimeZoneComparer(): React.ReactElement {
   } | null>(null);
   const [showColon, setShowColon] = useState(true);
 
+  // Initialize timezone once
   useEffect(() => {
     initializeWithCurrentTimezone();
   }, [initializeWithCurrentTimezone]);
 
+  // Update time every second
   useEffect(() => {
     const updateTime = () => {
       const newTime = new Date();
@@ -154,15 +155,14 @@ export function TimeZoneComparer(): React.ReactElement {
 
     updateTime();
     const timer = setInterval(updateTime, 1000);
-
     return () => clearInterval(timer);
   }, [setCurrentTime]);
 
+  // Blink colon
   useEffect(() => {
     const colonInterval = setInterval(() => {
       setShowColon((prev) => !prev);
     }, 500);
-
     return () => clearInterval(colonInterval);
   }, []);
 
@@ -312,28 +312,8 @@ export function TimeZoneComparer(): React.ReactElement {
     resetToCurrentTimezone();
   }, [resetToCurrentTimezone]);
 
-  // Modify the sortLocations function
-  const sortLocations = useCallback((locations: TimeZoneLocation[]) => {
-    const homeLocation = locations.find((loc) => loc.isCurrent);
-    if (!homeLocation) return locations;
-
-    const homeOffset = getTimezoneOffset(homeLocation.label || "UTC");
-
-    return locations.sort((a, b) => {
-      const aOffset = getTimezoneOffset(a.label || "UTC") - homeOffset;
-      const bOffset = getTimezoneOffset(b.label || "UTC") - homeOffset;
-
-      return aOffset - bOffset;
-    });
-  }, []);
-
-  // Modify the locations rendering to use the sorted locations
-  const sortedLocations = useMemo(
-    () => sortLocations(locations),
-    [locations, sortLocations]
-  );
-
-  console.log("Locations:", JSON.stringify(locations, null, 2));
+  // Memoize sorted locations to prevent unnecessary re-renders
+  const sortedLocations = useMemo(() => locations, [locations]);
 
   if (!currentTime) {
     return <div>Loading...</div>;
