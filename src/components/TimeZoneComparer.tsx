@@ -6,7 +6,6 @@ import { Plus, Trash2, Home, RotateCcw } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
-import { TimeZoneLocation } from "@/types/Location";
 
 // Update this object to only include the working time zones
 export const timeZoneMapping: { [key: string]: string } = {
@@ -132,14 +131,6 @@ const isValidTimeZone = (timeZone: string): boolean => {
     console.warn(`Invalid time zone: ${timeZone}`, error);
     return false;
   }
-};
-
-// Add this function to calculate timezone offset
-const getTimezoneOffset = (timeZone: string): number => {
-  const date = new Date();
-  const utcDate = new Date(date.toLocaleString("en-US", { timeZone: "UTC" }));
-  const tzDate = new Date(date.toLocaleString("en-US", { timeZone }));
-  return (tzDate.getTime() - utcDate.getTime()) / 60000;
 };
 
 export function TimeZoneComparer(): React.ReactElement {
