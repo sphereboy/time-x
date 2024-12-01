@@ -10,6 +10,12 @@ const getTimezoneOffset = (timeZone: string): number => {
   return (tzDate.getTime() - utcDate.getTime()) / 60000;
 };
 
+interface Settings {
+  showSeconds: boolean;
+  use24HourFormat: boolean;
+  showTimezoneAbbreviation: boolean;
+}
+
 interface TimeZoneState {
   locations: TimeZoneLocation[];
   currentTime: Date;
@@ -20,6 +26,8 @@ interface TimeZoneState {
   initializeWithCurrentTimezone: () => void;
   resetToCurrentTimezone: () => void;
   sortLocations: (locations: TimeZoneLocation[]) => TimeZoneLocation[];
+  settings: Settings;
+  updateSettings: (newSettings: Partial<Settings>) => void;
 }
 
 const getCurrentTimezone = (): TimeZoneLocation => ({
@@ -91,6 +99,18 @@ export const useTimeZoneStore = create<TimeZoneState>()(
           return aOffset - bOffset;
         });
       },
+      settings: {
+        showSeconds: false,
+        use24HourFormat: true,
+        showTimezoneAbbreviation: true,
+      },
+      updateSettings: (newSettings) =>
+        set((state) => ({
+          settings: {
+            ...state.settings,
+            ...newSettings,
+          },
+        })),
     }),
     {
       name: "time-zone-storage",

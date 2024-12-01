@@ -6,6 +6,7 @@ import { Plus, Trash2, Home, RotateCcw } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
+import { SettingsDialog } from "@/components/Settings";
 
 // Update this object to only include the working time zones
 export const timeZoneMapping: { [key: string]: string } = {
@@ -383,6 +384,7 @@ export function TimeZoneComparer(): React.ReactElement {
             Reset Time
           </button>
         )}
+        <SettingsDialog />
         <button
           className={styles.resetButton}
           onClick={handleReset}
