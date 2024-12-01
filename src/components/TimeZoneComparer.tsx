@@ -137,6 +137,7 @@ const isValidTimeZone = (timeZone: string): boolean => {
 export function TimeZoneComparer(): React.ReactElement {
   const {
     locations,
+    settings,
     removeLocation,
     updateLocation,
     initializeWithCurrentTimezone,
@@ -164,7 +165,7 @@ export function TimeZoneComparer(): React.ReactElement {
     initializeWithCurrentTimezone();
   }, [initializeWithCurrentTimezone]);
 
-  // Update time every second
+  // Update time every second or half second when showing seconds
   useEffect(() => {
     const updateTime = () => {
       if (!isManuallyAdjusted) {
@@ -175,9 +176,9 @@ export function TimeZoneComparer(): React.ReactElement {
     };
 
     updateTime();
-    const timer = setInterval(updateTime, 1000);
+    const timer = setInterval(updateTime, settings.showSeconds ? 500 : 1000);
     return () => clearInterval(timer);
-  }, [setCurrentTime, isManuallyAdjusted]);
+  }, [setCurrentTime, isManuallyAdjusted, settings.showSeconds]);
 
   // Blink colon
   useEffect(() => {
@@ -202,34 +203,55 @@ export function TimeZoneComparer(): React.ReactElement {
     }
   }, []);
 
-  const formatTime = useCallback((date: Date, timeZone: string) => {
-    const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
-    try {
-      return new Intl.DateTimeFormat("en-US", {
-        timeZone: mappedTimeZone,
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }).format(date);
-    } catch (error) {
-      console.warn(
-        `Invalid time zone: ${timeZone}. Using local time format instead.`,
-        error
-      );
-      return date.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      });
-    }
-  }, []);
+  const formatTime = useCallback(
+    (date: Date, timeZone: string) => {
+      const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
+      try {
+        return new Intl.DateTimeFormat("en-US", {
+          timeZone: mappedTimeZone,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: settings.showSeconds ? "2-digit" : undefined,
+          hour12: !settings.use24HourFormat,
+        }).format(date);
+      } catch (error) {
+        console.warn(
+          `Invalid time zone: ${timeZone}. Using local time format instead.`,
+          error
+        );
+        return date.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: settings.showSeconds ? "2-digit" : undefined,
+          hour12: !settings.use24HourFormat,
+        });
+      }
+    },
+    [settings.use24HourFormat, settings.showSeconds]
+  );
 
   const handleHourChange = useCallback(
     (locationId: string, newHour: string) => {
       const parsedHour = parseInt(newHour, 10);
-      if (!isNaN(parsedHour) && parsedHour >= 0 && parsedHour <= 23) {
+      const maxHour = settings.use24HourFormat ? 23 : 12;
+
+      if (!isNaN(parsedHour) && parsedHour >= 0 && parsedHour <= maxHour) {
         const newDate = new Date(currentTime);
-        newDate.setHours(parsedHour);
+        if (!settings.use24HourFormat) {
+          // Convert 12h format to 24h for internal storage
+          const currentHour = currentTime.getHours();
+          const isPM = currentHour >= 12;
+          const newHour24 = isPM
+            ? parsedHour === 12
+              ? 12
+              : parsedHour + 12
+            : parsedHour === 12
+            ? 0
+            : parsedHour;
+          newDate.setHours(newHour24);
+        } else {
+          newDate.setHours(parsedHour);
+        }
         setLocalCurrentTime(newDate);
         setCurrentTime(newDate);
         setIsManuallyAdjusted(true);
@@ -237,17 +259,21 @@ export function TimeZoneComparer(): React.ReactElement {
       setEditingHour(null);
       setInputValue("");
     },
-    [currentTime, setCurrentTime]
+    [currentTime, setCurrentTime, settings.use24HourFormat]
   );
 
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      if (value === "" || (parseInt(value) >= 0 && parseInt(value) <= 23)) {
+      const maxHour = settings.use24HourFormat ? 23 : 12;
+      if (
+        value === "" ||
+        (parseInt(value) >= 0 && parseInt(value) <= maxHour)
+      ) {
         setInputValue(value);
       }
     },
-    []
+    [settings.use24HourFormat]
   );
 
   const handleKeyDown = useCallback(
@@ -363,6 +389,29 @@ export function TimeZoneComparer(): React.ReactElement {
     zIndex: 2,
   };
 
+  // Move getTimezoneAbbreviation inside the component
+  const getTimezoneAbbreviation = useCallback(
+    (timeZone: string, date: Date): string => {
+      const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
+      try {
+        const formatter = new Intl.DateTimeFormat("en-US", {
+          timeZone: mappedTimeZone,
+          timeZoneName: "short",
+        });
+        const parts = formatter.formatToParts(date);
+        const timeZonePart = parts.find((part) => part.type === "timeZoneName");
+        return timeZonePart?.value || "";
+      } catch (error) {
+        console.warn(
+          `Error getting timezone abbreviation for ${timeZone}`,
+          error
+        );
+        return "";
+      }
+    },
+    []
+  );
+
   if (!currentTime) {
     return <div>Loading...</div>;
   }
@@ -400,7 +449,8 @@ export function TimeZoneComparer(): React.ReactElement {
             location.label || ""
           );
           const formattedTime = formatTime(currentTime, location.label || "");
-          const [hours, minutes] = formattedTime.split(":");
+          const [timeWithoutAmPm, amPm] = formattedTime.split(" ");
+          const [hours, minutes, seconds] = timeWithoutAmPm.split(":");
           const localHour = parseInt(hours, 10);
           const backgroundColor = getBackgroundColor(localHour);
           const isCurrentTimezone = location.isCurrent;
@@ -472,6 +522,23 @@ export function TimeZoneComparer(): React.ReactElement {
                       </div>
                     </div>
                     <div className={styles.minutes}>{minutes}</div>
+                    {settings.showSeconds && (
+                      <>
+                        <div className={styles.colonWrapper}>
+                          <div
+                            className={`${styles.colon} ${
+                              showColon ? styles.visible : styles.hidden
+                            }`}
+                          >
+                            :
+                          </div>
+                        </div>
+                        <div className={styles.seconds}>{seconds}</div>
+                      </>
+                    )}
+                    {!settings.use24HourFormat && (
+                      <div className={styles.amPm}>{amPm}</div>
+                    )}
                   </div>
                 </div>
                 <div className={styles.date}>
@@ -482,6 +549,16 @@ export function TimeZoneComparer(): React.ReactElement {
                 </div>
                 <div className={styles.timezone}>
                   {location.label || "Unknown"}
+                  {settings.showTimezoneAbbreviation && (
+                    <span className={styles.timezoneAbbreviation}>
+                      (
+                      {getTimezoneAbbreviation(
+                        location.label || "",
+                        currentTime
+                      )}
+                      )
+                    </span>
+                  )}
                 </div>
                 {location.secondaryLabels &&
                   Array.isArray(location.secondaryLabels) && (
@@ -554,16 +631,13 @@ export function TimeZoneComparer(): React.ReactElement {
                 <div className={styles.offset}>
                   {(() => {
                     if (isValidTimeZone(location.label || "")) {
-                      const parts = new Intl.DateTimeFormat("en-US", {
-                        timeZone:
-                          timeZoneMapping[location.label || ""] ||
-                          location.label,
-                        timeZoneName: "short",
-                      }).formatToParts(currentTime);
-                      const timeZonePart = parts.find(
-                        (part) => part.type === "timeZoneName"
+                      const abbreviation = getTimezoneAbbreviation(
+                        location.label || "",
+                        currentTime
                       );
-                      return timeZonePart ? timeZonePart.value : "Unknown";
+                      return settings.showTimezoneAbbreviation
+                        ? abbreviation
+                        : "";
                     }
                     return "Invalid TZ";
                   })()}

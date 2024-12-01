@@ -92,6 +92,7 @@
   /* Adjust font sizes for smaller screens */
   .hours,
   .minutes,
+  .seconds,
   .colon,
   .hourInput,
   .placeholderHour {
@@ -214,7 +215,18 @@
   font-size: 0.9rem;
   opacity: 0.8;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-  margin-bottom: 0.5rem; /* Add some space below the timezone */
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.timezoneAbbreviation {
+  font-size: 0.8em;
+  opacity: 0.9;
+  font-weight: 500;
 }
 
 .secondaryLabels {
@@ -230,11 +242,15 @@
 
 .offset {
   font-size: 0.8rem;
-  opacity: 0.6;
+  opacity: 0.8;
   margin-top: auto;
   padding-bottom: 20px;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Subtle text shadow for better readability */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .editButton,
@@ -372,6 +388,7 @@
   .hourInputWrapper,
   .hours,
   .minutes,
+  .seconds,
   .colon,
   .hourInput,
   .placeholderHour {
@@ -384,6 +401,7 @@
   .hourInputWrapper,
   .hours,
   .minutes,
+  .seconds,
   .colon,
   .hourInput,
   .placeholderHour {
@@ -405,6 +423,7 @@
 
   .hours,
   .minutes,
+  .seconds,
   .colon,
   .hourInput,
   .placeholderHour {
@@ -416,6 +435,7 @@
 @media (min-width: 1024px) {
   .hours,
   .minutes,
+  .seconds,
   .colon,
   .hourInput,
   .placeholderHour {
@@ -596,4 +616,40 @@
 /* Add a text shadow to help with contrast on any background */
 .topButtons button svg {
   filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+}
+
+.amPm {
+  font-size: 1rem;
+  opacity: 0.8;
+  margin-left: 8px;
+  text-transform: uppercase;
+}
+
+/* Update for mobile */
+@media (max-width: 767px) {
+  .amPm {
+    font-size: 0.8rem;
+    margin-left: 4px;
+  }
+
+  .timezone {
+    font-size: 0.7rem;
+  }
+
+  .timezoneAbbreviation {
+    font-size: 0.7em;
+  }
+}
+
+@media (max-width: 767px) {
+  .offset {
+    font-size: 0.7rem;
+    padding-bottom: 10px;
+  }
+}
+
+.seconds {
+  font-size: inherit;
+  min-width: 2ch;
+  text-align: center;
 }
