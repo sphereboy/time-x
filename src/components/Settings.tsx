@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,42 @@ import { Settings2 } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 
 export function SettingsDialog() {
   const { settings, updateSettings } = useTimeZoneStore();
+
+  useEffect(() => {
+    const applyTheme = (theme: string) => {
+      const root = document.documentElement;
+      if (theme === "system") {
+        const systemPrefersDark = window.matchMedia(
+          "(prefers-color-scheme: dark)"
+        ).matches;
+        root.classList.toggle("dark", systemPrefersDark);
+      } else {
+        root.classList.toggle("dark", theme === "dark");
+      }
+    };
+
+    applyTheme(settings?.theme || "system");
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = () => {
+      if (settings?.theme === "system") {
+        applyTheme("system");
+      }
+    };
+    mediaQuery.addEventListener("change", handler);
+    return () => mediaQuery.removeEventListener("change", handler);
+  }, [settings?.theme]);
 
   return (
     <Dialog>
@@ -81,6 +113,30 @@ export function SettingsDialog() {
                 updateSettings({ showTimezoneAbbreviation: checked })
               }
             />
+          </div>
+          <Separator />
+          <div className="flex items-center justify-between space-x-2">
+            <Label htmlFor="theme" className="flex flex-col space-y-1">
+              <span>Theme</span>
+              <span className="font-normal text-sm text-muted-foreground">
+                Choose your preferred color scheme
+              </span>
+            </Label>
+            <Select
+              value={settings?.theme || "system"}
+              onValueChange={(value: "light" | "dark" | "system") =>
+                updateSettings({ theme: value })
+              }
+            >
+              <SelectTrigger className="w-[120px]" id="theme">
+                <SelectValue placeholder="Select theme" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="system">System</SelectItem>
+                <SelectItem value="light">Light</SelectItem>
+                <SelectItem value="dark">Dark</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </DialogContent>

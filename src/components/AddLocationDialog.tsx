@@ -19,6 +19,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { timeZoneMapping } from "./TimeZoneComparer";
+import {
+  VALIDATION_LIMITS,
+  sanitizeLocationName,
+} from "@/lib/validation";
 
 interface AddLocationDialogProps {
   children: React.ReactNode;
@@ -51,7 +55,8 @@ export function AddLocationDialog({ children }: AddLocationDialogProps) {
 
   const handleAddLocation = () => {
     if (selectedTimezone) {
-      addLocation(locationName || selectedTimezone, selectedTimezone);
+      const sanitizedName = sanitizeLocationName(locationName || selectedTimezone);
+      addLocation(sanitizedName, selectedTimezone);
       setOpen(false);
       setSelectedTimezone("");
       setLocationName("");
@@ -85,6 +90,7 @@ export function AddLocationDialog({ children }: AddLocationDialogProps) {
             placeholder="Location Name (optional)"
             value={locationName}
             onChange={(e) => setLocationName(e.target.value)}
+            maxLength={VALIDATION_LIMITS.LOCATION_NAME_MAX_LENGTH}
           />
         </div>
         <Button onClick={handleAddLocation} disabled={!selectedTimezone}>

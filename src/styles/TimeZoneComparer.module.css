@@ -1,3 +1,4 @@
+/* Base styles (mobile-first) */
 .timeAdjustButton {
   background: none;
   border: none;
@@ -25,110 +26,53 @@
   min-height: 100vh;
   overflow: hidden;
   position: relative;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 .addButton {
   position: fixed;
-  top: 20px;
-  left: 20px;
-  background-color: white;
-  color: black;
-  border: none;
+  top: calc(10px + env(safe-area-inset-top));
+  left: calc(10px + env(safe-area-inset-left));
+  background: var(--button-bg, rgba(255, 255, 255, 0.1));
+  color: var(--button-color, white);
+  border: 1px solid var(--button-border, rgba(255, 255, 255, 0.2));
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
   cursor: pointer;
-  z-index: 10;
+  z-index: 1000;
 }
 
 .addButton:hover {
-  background-color: #f0f0f0;
+  opacity: 0.8;
 }
 
 .timezonesContainer {
   display: flex;
+  flex-direction: column;
   flex-grow: 1;
-  overflow-x: auto;
   height: 100vh;
 }
 
-/* Update the media query for mobile devices */
-@media (max-width: 767px) {
-  .container {
-    height: 100vh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .timezonesContainer {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
-
-  .timezoneColumn {
-    flex: 0 0 50%; /* Set each column to take up 50% of the viewport height */
-    min-height: 50vh;
-    height: 50vh;
-    overflow-y: auto;
-  }
-
-  .timeContent {
-    padding-top: 2vh; /* Further reduce top padding for mobile */
-    padding-bottom: 2vh; /* Further reduce bottom padding for mobile */
-  }
-
-  .addButton {
-    top: 10px;
-    left: 10px;
-    position: fixed;
-    z-index: 1000;
-  }
-
-  /* Adjust font sizes for smaller screens */
-  .hours,
-  .minutes,
-  .seconds,
-  .colon,
-  .hourInput,
-  .placeholderHour {
-    font-size: 1.8rem;
-  }
-
-  .date {
-    font-size: 0.8rem;
-  }
-
-  .location {
-    font-size: 0.7rem;
-  }
-
-  .timezone {
-    font-size: 0.6rem;
-  }
-
-  .secondaryLabels {
-    font-size: 0.6rem;
-  }
-
-  .offset {
-    font-size: 0.6rem;
-  }
-}
-
 .timezoneColumn {
-  flex: 1;
+  flex: 0 0 50%;
+  min-height: 50vh;
+  height: 50vh;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   text-align: center;
   position: relative;
-  overflow: hidden;
-  min-height: 100%;
+  overflow-y: auto;
 }
 
 .hoverCard {
@@ -154,7 +98,8 @@
   flex-direction: column;
   align-items: center;
   padding: 20px;
-  padding-top: 30vh; /* Adjust this value as needed */
+  padding-top: 2vh;
+  padding-bottom: 2vh;
 }
 
 .time {
@@ -180,11 +125,11 @@
 .minutes,
 .hourInput,
 .placeholderHour {
-  font-size: 2.5rem;
+  font-size: 1.8rem;
 }
 
 .colon {
-  font-size: 3rem;
+  font-size: 1.8rem;
   margin: 0 0.2rem;
   opacity: 0.7;
   transition: opacity 0.3s ease-in-out;
@@ -198,21 +143,27 @@
   opacity: 0;
 }
 
+.seconds {
+  font-size: inherit;
+  min-width: 2ch;
+  text-align: center;
+}
+
 .date {
-  font-size: 1.2rem;
+  font-size: 0.8rem;
   margin-top: 1rem;
   margin-bottom: 1rem;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Subtle text shadow for better readability */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 .location {
-  font-size: 1rem;
+  font-size: 0.7rem;
   margin-bottom: 0.5rem;
-  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2); /* Subtle text shadow for better readability */
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
 }
 
 .timezone {
-  font-size: 0.9rem;
+  font-size: 0.6rem;
   opacity: 0.8;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   margin-bottom: 0.5rem;
@@ -224,16 +175,16 @@
 }
 
 .timezoneAbbreviation {
-  font-size: 0.8em;
+  font-size: 0.7em;
   opacity: 0.9;
   font-weight: 500;
 }
 
 .secondaryLabels {
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   opacity: 0.7;
-  margin-top: 0.5rem; /* Increase this value to add more space */
-  margin-bottom: 0.5rem; /* Add margin to the bottom */
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   display: flex;
   flex-direction: column;
@@ -241,10 +192,10 @@
 }
 
 .offset {
-  font-size: 0.8rem;
+  font-size: 0.6rem;
   opacity: 0.8;
   margin-top: auto;
-  padding-bottom: 20px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
   margin-bottom: 5px;
   display: flex;
@@ -259,8 +210,10 @@
   color: black;
   border: none;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -270,10 +223,6 @@
 
 .editButton:hover {
   background-color: #e0e0e0;
-}
-
-.deleteButton:hover {
-  background-color: #ffcccb;
 }
 
 .hourInputWrapper {
@@ -297,25 +246,39 @@
   cursor: pointer;
   min-width: 2ch;
   text-align: center;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  margin: 0;
+}
+
+.hours:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .resetTimeButton {
-  background-color: rgba(255, 255, 255, 0.2);
-  border: none;
-  border-radius: 20px;
-  padding: 8px 16px;
-  color: white;
+  background: var(--button-bg, rgba(255, 255, 255, 0.1)) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--button-border, rgba(255, 255, 255, 0.2)) !important;
+  color: var(--button-color, white) !important;
+  padding: 8px 16px !important;
+  width: auto !important;
   font-size: 14px;
+  border-radius: 20px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: opacity 0.2s ease;
   display: flex;
   align-items: center;
   gap: 6px;
-  backdrop-filter: blur(5px);
+  min-height: 44px;
 }
 
 .resetTimeButton:hover {
-  background-color: rgba(255, 255, 255, 0.3);
+  opacity: 0.8;
 }
 
 .deleteIconWrapper {
@@ -338,11 +301,14 @@
   border: none;
   color: rgba(255, 255, 255, 0.9);
   cursor: pointer;
-  padding: 5px;
+  padding: 10px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .deleteButton:hover {
   color: rgba(255, 255, 255, 1);
+  background-color: transparent;
 }
 
 .addCustomLabelButton {
@@ -350,10 +316,12 @@
   border: none;
   color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
-  padding: 5px;
+  padding: 10px;
   margin-top: 5px;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .timezoneColumn:hover .addCustomLabelButton {
@@ -370,77 +338,19 @@
   align-items: center;
   justify-content: center;
   padding: 10px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
   font-size: 0.8rem;
   opacity: 0.8;
 }
 
 .homeIconWrapper {
   margin-bottom: 5px;
-  color: rgba(255, 255, 255, 0.9);
+  color: inherit;
+  opacity: 0.9;
 }
 
 .utcReference {
   text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-}
-
-/* Media query for larger screens */
-@media (min-width: 768px) {
-  .hourInputWrapper,
-  .hours,
-  .minutes,
-  .seconds,
-  .colon,
-  .hourInput,
-  .placeholderHour {
-    font-size: 3rem; /* Slightly reduce font size for tablets */
-  }
-}
-
-/* Media query for extra-large screens */
-@media (min-width: 1200px) {
-  .hourInputWrapper,
-  .hours,
-  .minutes,
-  .seconds,
-  .colon,
-  .hourInput,
-  .placeholderHour {
-    font-size: 5rem;
-  }
-}
-
-/* Media query for wider screens */
-@media (min-width: 640px) {
-  .hourMinuteWrapper {
-    flex-direction: row;
-  }
-
-  .colonWrapper {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-  }
-
-  .hours,
-  .minutes,
-  .seconds,
-  .colon,
-  .hourInput,
-  .placeholderHour {
-    font-size: 3rem;
-  }
-}
-
-/* Media query for even wider screens */
-@media (min-width: 1024px) {
-  .hours,
-  .minutes,
-  .seconds,
-  .colon,
-  .hourInput,
-  .placeholderHour {
-    font-size: 4rem;
-  }
 }
 
 .secondaryLabelWrapper {
@@ -449,33 +359,48 @@
   justify-content: center;
   margin-bottom: 4px;
   width: 100%;
-  padding: 4px 0; /* Add padding to top and bottom */
+  padding: 4px 0;
 }
 
 .labelText {
   cursor: pointer;
-  padding: 2px 4px;
+  padding: 8px;
   border-radius: 4px;
   transition: background-color 0.2s ease-in-out;
   text-align: center;
   width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
 }
 
 .labelText:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
 
+.labelText:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
 .deleteLabelButton {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 2px;
+  padding: 10px;
   opacity: 0.6;
   transition: opacity 0.2s ease-in-out;
   position: absolute;
   right: 0;
   top: 50%;
   transform: translateY(-50%);
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .deleteLabelButton:hover {
@@ -484,12 +409,13 @@
 
 .labelInput {
   font-size: 0.8rem;
-  padding: 2px 4px;
+  padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   background-color: rgba(0, 0, 0, 0.1);
   color: inherit;
   text-align: center;
   width: 100%;
+  min-height: 44px;
 }
 
 .labelInput:focus {
@@ -503,12 +429,13 @@
 
 .newLabelInput {
   font-size: 0.8rem;
-  padding: 2px 4px;
+  padding: 8px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   background-color: rgba(0, 0, 0, 0.1);
   color: inherit;
   width: 100%;
   max-width: 150px;
+  min-height: 44px;
 }
 
 .newLabelInput:focus {
@@ -538,9 +465,11 @@
   color: white;
   border: none;
   border-radius: 4px;
-  padding: 8px 16px;
+  padding: 12px 20px;
   cursor: pointer;
   transition: background-color 0.2s ease-in-out;
+  min-height: 44px;
+  width: auto;
 }
 
 .addLocationPrompt .addButton:hover {
@@ -556,20 +485,18 @@
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.3s;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .resetButton:hover {
   background-color: #e0e0e0;
 }
 
-.container {
-  position: relative;
-}
-
 .topButtons {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: calc(20px + env(safe-area-inset-top));
+  right: calc(20px + env(safe-area-inset-right));
   display: flex;
   gap: 8px;
   z-index: 10;
@@ -582,74 +509,129 @@
   justify-content: center;
   border-radius: 8px;
   padding: 8px;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--button-bg, rgba(255, 255, 255, 0.1));
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: white;
+  border: 1px solid var(--button-border, rgba(255, 255, 255, 0.2));
+  color: var(--button-color, white);
   transition: all 0.2s ease;
-  height: 36px;
-  width: 36px;
+  height: 44px;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .topButtons button:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.3);
+  opacity: 0.8;
   transform: translateY(-1px);
 }
 
-/* For the reset time text button */
-.resetTimeButton {
-  background: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
-  padding: 8px 16px !important;
-  width: auto !important;
-  font-size: 14px;
-}
-
-.resetTimeButton:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  border-color: rgba(255, 255, 255, 0.3) !important;
-}
-
-/* Add a text shadow to help with contrast on any background */
 .topButtons button svg {
-  filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(0px 1px 1px rgba(128, 128, 128, 0.3));
 }
 
 .amPm {
-  font-size: 1rem;
+  font-size: 0.8rem;
   opacity: 0.8;
-  margin-left: 8px;
+  margin-left: 4px;
   text-transform: uppercase;
 }
 
-/* Update for mobile */
-@media (max-width: 767px) {
-  .amPm {
-    font-size: 0.8rem;
-    margin-left: 4px;
+/* sm: 640px - Wider mobile/small tablet */
+@media (min-width: 640px) {
+  .hourMinuteWrapper {
+    flex-direction: row;
+  }
+
+  .colonWrapper {
+    display: flex;
+    justify-content: center;
+    width: auto;
+  }
+
+  .hours,
+  .minutes,
+  .seconds,
+  .colon,
+  .hourInput,
+  .placeholderHour {
+    font-size: 3rem;
+  }
+
+  .addButton {
+    top: 20px;
+    left: 20px;
+  }
+}
+
+/* md: 768px - Tablet */
+@media (min-width: 768px) {
+  .timezonesContainer {
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .timezoneColumn {
+    flex: 1;
+    min-height: 100%;
+    height: auto;
+  }
+
+  .timeContent {
+    padding-top: 30vh;
+  }
+
+  .date {
+    font-size: 1.2rem;
+  }
+
+  .location {
+    font-size: 1rem;
   }
 
   .timezone {
-    font-size: 0.7rem;
+    font-size: 0.9rem;
   }
 
   .timezoneAbbreviation {
-    font-size: 0.7em;
+    font-size: 0.8em;
   }
-}
 
-@media (max-width: 767px) {
+  .secondaryLabels {
+    font-size: 0.8rem;
+  }
+
   .offset {
-    font-size: 0.7rem;
-    padding-bottom: 10px;
+    font-size: 0.8rem;
+    padding-bottom: 20px;
+  }
+
+  .amPm {
+    font-size: 1rem;
+    margin-left: 8px;
   }
 }
 
-.seconds {
-  font-size: inherit;
-  min-width: 2ch;
-  text-align: center;
+/* lg: 1024px - Desktop */
+@media (min-width: 1024px) {
+  .hours,
+  .minutes,
+  .seconds,
+  .colon,
+  .hourInput,
+  .placeholderHour {
+    font-size: 4rem;
+  }
+}
+
+/* xl: 1200px - Large desktop */
+@media (min-width: 1200px) {
+  .hourInputWrapper,
+  .hours,
+  .minutes,
+  .seconds,
+  .colon,
+  .hourInput,
+  .placeholderHour {
+    font-size: 5rem;
+  }
 }

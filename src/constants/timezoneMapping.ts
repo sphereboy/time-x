@@ -1,0 +1,38 @@
+export const timeZoneMapping: { [key: string]: string } = {
+  "Hawaiian Standard Time": "Pacific/Honolulu",
+  "Alaskan Standard Time": "America/Anchorage",
+  "Pacific Standard Time": "America/Los_Angeles",
+  "Mountain Standard Time": "America/Denver",
+  "Central Standard Time": "America/Chicago",
+  "Eastern Standard Time": "America/New_York",
+  "Argentina Standard Time": "America/Argentina/Buenos_Aires",
+  "Brazil Standard Time": "America/Sao_Paulo",
+  "Chile Standard Time": "America/Santiago",
+  "GMT Standard Time": "Europe/London",
+  "Central European Time": "Europe/Paris",
+  "Eastern European Time": "Europe/Helsinki",
+  "Russian Standard Time": "Europe/Moscow",
+  "India Standard Time": "Asia/Kolkata",
+  "China Standard Time": "Asia/Shanghai",
+  "Japan Standard Time": "Asia/Tokyo",
+  "Singapore Standard Time": "Asia/Singapore",
+  "Korea Standard Time": "Asia/Seoul",
+  "Australian Eastern Time": "Australia/Sydney",
+  "Australian Central Time": "Australia/Adelaide",
+  "Australian Western Time": "Australia/Perth",
+  "New Zealand Standard Time": "Pacific/Auckland",
+  "Israel Standard Time": "Asia/Jerusalem",
+  "Gulf Standard Time": "Asia/Dubai",
+  "South Africa Standard Time": "Africa/Johannesburg",
+  "East Africa Time": "Africa/Nairobi",
+  "Bangkok Time": "Asia/Bangkok",
+  "Vietnam Time": "Asia/Ho_Chi_Minh",
+  "Indonesia Western Time": "Asia/Jakarta",
+  "Pakistan Standard Time": "Asia/Karachi",
+  "Philippines Standard Time": "Asia/Manila",
+  "Malaysia Time": "Asia/Kuala_Lumpur",
+};
+
+export const getMappedTimeZone = (timeZone: string): string => {
+  return timeZoneMapping[timeZone] || timeZone;
+};

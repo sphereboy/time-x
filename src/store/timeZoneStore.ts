@@ -1,7 +1,46 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { v4 as uuidv4 } from "uuid";
 import { TimeZoneLocation } from "@/types/Location";
+import { VALIDATION_LIMITS } from "@/lib/validation";
+
+const isValidLocation = (loc: unknown): loc is TimeZoneLocation => {
+  if (!loc || typeof loc !== "object") return false;
+  const l = loc as Record<string, unknown>;
+  return (
+    typeof l.id === "string" &&
+    l.id.length > 0 &&
+    l.id.length <= 100 &&
+    typeof l.name === "string" &&
+    l.name.length <= VALIDATION_LIMITS.LOCATION_NAME_MAX_LENGTH &&
+    typeof l.label === "string" &&
+    l.label.length <= VALIDATION_LIMITS.LABEL_MAX_LENGTH &&
+    typeof l.offset === "number" &&
+    typeof l.isCurrent === "boolean" &&
+    (l.secondaryLabels === undefined ||
+      (Array.isArray(l.secondaryLabels) &&
+        l.secondaryLabels.every(
+          (s) =>
+            typeof s === "string" &&
+            s.length <= VALIDATION_LIMITS.LABEL_MAX_LENGTH
+        )))
+  );
+};
+
+const sanitizeLocations = (
+  locations: unknown[]
+): TimeZoneLocation[] => {
+  if (!Array.isArray(locations)) return [];
+  return locations
+    .filter(isValidLocation)
+    .map((loc) => ({
+      ...loc,
+      name: loc.name.slice(0, VALIDATION_LIMITS.LOCATION_NAME_MAX_LENGTH),
+      label: loc.label.slice(0, VALIDATION_LIMITS.LABEL_MAX_LENGTH),
+      secondaryLabels: loc.secondaryLabels?.map((s) =>
+        s.slice(0, VALIDATION_LIMITS.LABEL_MAX_LENGTH)
+      ),
+    }));
+};
 
 const getTimezoneOffset = (timeZone: string): number => {
   const date = new Date();
@@ -10,10 +49,13 @@ const getTimezoneOffset = (timeZone: string): number => {
   return (tzDate.getTime() - utcDate.getTime()) / 60000;
 };
 
+type ThemeMode = "light" | "dark" | "system";
+
 interface Settings {
   showSeconds: boolean;
   use24HourFormat: boolean;
   showTimezoneAbbreviation: boolean;
+  theme: ThemeMode;
 }
 
 interface TimeZoneState {
@@ -50,7 +92,7 @@ export const useTimeZoneStore = create<TimeZoneState>()(
           }
 
           const newLocation: TimeZoneLocation = {
-            id: uuidv4(),
+            id: crypto.randomUUID(),
             name,
             label,
             offset: 0,
@@ -103,6 +145,7 @@ export const useTimeZoneStore = create<TimeZoneState>()(
         showSeconds: false,
         use24HourFormat: true,
         showTimezoneAbbreviation: true,
+        theme: "system",
       },
       updateSettings: (newSettings) =>
         set((state) => ({
@@ -119,7 +162,16 @@ export const useTimeZoneStore = create<TimeZoneState>()(
           ...loc,
           offset: 0,
         })),
+        settings: state.settings,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.locations = sanitizeLocations(state.locations);
+          if (state.locations.length === 0) {
+            state.locations = [getCurrentTimezone()];
+          }
+        }
+      },
     }
   )
 );

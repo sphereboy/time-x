@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const metadata = {
   title: "Time-X | Compare Time Zones",
@@ -13,7 +14,9 @@ const TimeZoneComparer = dynamic(
 export default function Home() {
   return (
     <main className="h-screen overflow-hidden">
-      <TimeZoneComparer />
+      <ErrorBoundary>
+        <TimeZoneComparer />
+      </ErrorBoundary>
     </main>
   );
 }

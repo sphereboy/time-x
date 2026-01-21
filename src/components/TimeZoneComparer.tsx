@@ -7,132 +7,17 @@ import styles from "@/styles/TimeZoneComparer.module.css";
 import { useTimeZoneStore } from "@/store/timeZoneStore";
 import { AddLocationDialog } from "@/components/AddLocationDialog";
 import { SettingsDialog } from "@/components/Settings";
+import { VALIDATION_LIMITS, sanitizeInput } from "@/lib/validation";
+import { getBackgroundColor, isLightColor } from "@/lib/colors";
+import {
+  isValidTimeZone,
+  getAdjustedTime as getAdjustedTimeUtil,
+  formatTime as formatTimeUtil,
+  getTimezoneAbbreviation as getTimezoneAbbreviationUtil,
+} from "@/lib/timeFormatting";
+import { timeZoneMapping } from "@/constants/timezoneMapping";
 
-// Update this object to only include the working time zones
-export const timeZoneMapping: { [key: string]: string } = {
-  "Hawaiian Standard Time": "Pacific/Honolulu",
-  "Alaskan Standard Time": "America/Anchorage",
-  "Pacific Standard Time": "America/Los_Angeles",
-  "Mountain Standard Time": "America/Denver",
-  "Central Standard Time": "America/Chicago",
-  "Eastern Standard Time": "America/New_York",
-  "Argentina Standard Time": "America/Argentina/Buenos_Aires",
-  "Brazil Standard Time": "America/Sao_Paulo",
-  "Chile Standard Time": "America/Santiago",
-  "GMT Standard Time": "Europe/London",
-  "Central European Time": "Europe/Paris",
-  "Eastern European Time": "Europe/Helsinki",
-  "Russian Standard Time": "Europe/Moscow",
-  "India Standard Time": "Asia/Kolkata",
-  "China Standard Time": "Asia/Shanghai",
-  "Japan Standard Time": "Asia/Tokyo",
-  "Singapore Standard Time": "Asia/Singapore",
-  "Korea Standard Time": "Asia/Seoul",
-  "Australian Eastern Time": "Australia/Sydney",
-  "Australian Central Time": "Australia/Adelaide",
-  "Australian Western Time": "Australia/Perth",
-  "New Zealand Standard Time": "Pacific/Auckland",
-  "Israel Standard Time": "Asia/Jerusalem",
-  "Gulf Standard Time": "Asia/Dubai",
-  "South Africa Standard Time": "Africa/Johannesburg",
-  "East Africa Time": "Africa/Nairobi",
-  "Bangkok Time": "Asia/Bangkok",
-  "Vietnam Time": "Asia/Ho_Chi_Minh",
-  "Indonesia Western Time": "Asia/Jakarta",
-  "Pakistan Standard Time": "Asia/Karachi",
-  "Philippines Standard Time": "Asia/Manila",
-  "Malaysia Time": "Asia/Kuala_Lumpur",
-};
-
-const getBackgroundColor = (hour: number): string => {
-  const colors = [
-    { time: 0, color: "#16053a" },
-    { time: 1, color: "#040B1D" },
-    { time: 2, color: "#030c1b" },
-    { time: 3, color: "#040F21" },
-    { time: 4, color: "#081930" },
-    { time: 5, color: "#1b475b" },
-    { time: 6, color: "#477a88" },
-    { time: 7, color: "#69aab1" },
-    { time: 8, color: "#93c6bc" },
-    { time: 9, color: "#c1dabe" },
-    { time: 10, color: "#e9ebb5" },
-    { time: 11, color: "#F5EB9F" },
-    { time: 12, color: "#f9e886" },
-    { time: 13, color: "#FEE56D" },
-    { time: 14, color: "#fbcf63" },
-    { time: 15, color: "#F7B45B" },
-    { time: 16, color: "#f29b55" },
-    { time: 17, color: "#d37d5c" },
-    { time: 18, color: "#9a626a" },
-    { time: 19, color: "#6a4277" },
-    { time: 20, color: "#4D2971" },
-    { time: 21, color: "#2d1852" },
-    { time: 22, color: "#301755" },
-    { time: 23, color: "#0C052C" },
-    { time: 24, color: "#16053a" }, // Repeat the first color for a smooth 24-hour cycle
-  ];
-
-  const getColorComponent = (
-    start: number,
-    end: number,
-    ratio: number
-  ): number => {
-    return Math.round(start + (end - start) * ratio);
-  };
-
-  const interpolateColor = (
-    color1: string,
-    color2: string,
-    ratio: number
-  ): string => {
-    const r1 = parseInt(color1.slice(1, 3), 16);
-    const g1 = parseInt(color1.slice(3, 5), 16);
-    const b1 = parseInt(color1.slice(5, 7), 16);
-    const r2 = parseInt(color2.slice(1, 3), 16);
-    const g2 = parseInt(color2.slice(3, 5), 16);
-    const b2 = parseInt(color2.slice(5, 7), 16);
-
-    const r = getColorComponent(r1, r2, ratio);
-    const g = getColorComponent(g1, g2, ratio);
-    const b = getColorComponent(b1, b2, ratio);
-
-    return `#${r.toString(16).padStart(2, "0")}${g
-      .toString(16)
-      .padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
-  };
-
-  for (let i = 0; i < colors.length - 1; i++) {
-    if (hour >= colors[i].time && hour <= colors[i + 1].time) {
-      const ratio =
-        (hour - colors[i].time) / (colors[i + 1].time - colors[i].time);
-      return interpolateColor(colors[i].color, colors[i + 1].color, ratio);
-    }
-  }
-
-  // Fallback color if something goes wrong
-  return "#000000";
-};
-
-const isLightColor = (color: string): boolean => {
-  const hex = color.replace("#", "");
-  const r = parseInt(hex.substr(0, 2), 16);
-  const g = parseInt(hex.substr(2, 2), 16);
-  const b = parseInt(hex.substr(4, 2), 16);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return brightness > 155; // You can adjust this threshold as needed
-};
-
-const isValidTimeZone = (timeZone: string): boolean => {
-  try {
-    const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
-    Intl.DateTimeFormat(undefined, { timeZone: mappedTimeZone });
-    return true;
-  } catch (error) {
-    console.warn(`Invalid time zone: ${timeZone}`, error);
-    return false;
-  }
-};
+export { timeZoneMapping };
 
 export function TimeZoneComparer(): React.ReactElement {
   const {
@@ -189,49 +74,21 @@ export function TimeZoneComparer(): React.ReactElement {
   }, []);
 
   const getAdjustedTime = useCallback((baseTime: Date, timeZone: string) => {
-    const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
-    try {
-      return new Date(
-        baseTime.toLocaleString("en-US", { timeZone: mappedTimeZone })
-      );
-    } catch (error) {
-      console.warn(
-        `Invalid time zone: ${timeZone}. Using local time instead.`,
-        error
-      );
-      return new Date(baseTime);
-    }
+    return getAdjustedTimeUtil(baseTime, timeZone);
   }, []);
 
   const formatTime = useCallback(
     (date: Date, timeZone: string) => {
-      const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
-      try {
-        return new Intl.DateTimeFormat("en-US", {
-          timeZone: mappedTimeZone,
-          hour: "2-digit",
-          minute: "2-digit",
-          second: settings.showSeconds ? "2-digit" : undefined,
-          hour12: !settings.use24HourFormat,
-        }).format(date);
-      } catch (error) {
-        console.warn(
-          `Invalid time zone: ${timeZone}. Using local time format instead.`,
-          error
-        );
-        return date.toLocaleTimeString("en-US", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: settings.showSeconds ? "2-digit" : undefined,
-          hour12: !settings.use24HourFormat,
-        });
-      }
+      return formatTimeUtil(date, timeZone, {
+        showSeconds: settings.showSeconds,
+        use24HourFormat: settings.use24HourFormat,
+      });
     },
     [settings.use24HourFormat, settings.showSeconds]
   );
 
   const handleHourChange = useCallback(
-    (locationId: string, newHour: string) => {
+    (_locationId: string, newHour: string) => {
       const parsedHour = parseInt(newHour, 10);
       const maxHour = settings.use24HourFormat ? 23 : 12;
 
@@ -311,10 +168,13 @@ export function TimeZoneComparer(): React.ReactElement {
     if (newLabelInput && newLabelInput.value.trim()) {
       const location = locations.find((loc) => loc.id === locationId);
       if (location) {
-        const updatedLabels = location.secondaryLabels
-          ? [...location.secondaryLabels, newLabelInput.value.trim()]
-          : [newLabelInput.value.trim()];
-        updateLocation(locationId, { secondaryLabels: updatedLabels });
+        const sanitizedLabel = sanitizeInput(newLabelInput.value);
+        if (sanitizedLabel) {
+          const updatedLabels = location.secondaryLabels
+            ? [...location.secondaryLabels, sanitizedLabel]
+            : [sanitizedLabel];
+          updateLocation(locationId, { secondaryLabels: updatedLabels });
+        }
       }
     }
     setNewLabelInput(null);
@@ -334,11 +194,12 @@ export function TimeZoneComparer(): React.ReactElement {
     const location = locations.find((loc) => loc.id === locationId);
     if (location) {
       const updatedLabels = [...(location.secondaryLabels || [])];
-      if (labelInputValue.trim() === "") {
+      const sanitizedLabel = sanitizeInput(labelInputValue);
+      if (sanitizedLabel === "") {
         // Remove the label if it's empty
         updatedLabels.splice(index, 1);
       } else {
-        updatedLabels[index] = labelInputValue.trim();
+        updatedLabels[index] = sanitizedLabel;
       }
       updateLocation(locationId, { secondaryLabels: updatedLabels });
     }
@@ -389,25 +250,9 @@ export function TimeZoneComparer(): React.ReactElement {
     zIndex: 2,
   };
 
-  // Move getTimezoneAbbreviation inside the component
   const getTimezoneAbbreviation = useCallback(
     (timeZone: string, date: Date): string => {
-      const mappedTimeZone = timeZoneMapping[timeZone] || timeZone;
-      try {
-        const formatter = new Intl.DateTimeFormat("en-US", {
-          timeZone: mappedTimeZone,
-          timeZoneName: "short",
-        });
-        const parts = formatter.formatToParts(date);
-        const timeZonePart = parts.find((part) => part.type === "timeZoneName");
-        return timeZonePart?.value || "";
-      } catch (error) {
-        console.warn(
-          `Error getting timezone abbreviation for ${timeZone}`,
-          error
-        );
-        return "";
-      }
+      return getTimezoneAbbreviationUtil(timeZone, date);
     },
     []
   );
@@ -416,8 +261,30 @@ export function TimeZoneComparer(): React.ReactElement {
     return <div>Loading...</div>;
   }
 
+  // Calculate button colors based on first location's background
+  const firstLocation = sortedLocations[0];
+  const firstLocationTime = firstLocation
+    ? formatTime(currentTime, firstLocation.label || "")
+    : "12:00";
+  const firstHour = parseInt(firstLocationTime.split(":")[0], 10);
+  const firstBgColor = getBackgroundColor(firstHour);
+  const buttonTextColor = isLightColor(firstBgColor) ? "#393939" : "white";
+  const buttonBgColor = isLightColor(firstBgColor)
+    ? "rgba(0, 0, 0, 0.1)"
+    : "rgba(255, 255, 255, 0.1)";
+  const buttonBorderColor = isLightColor(firstBgColor)
+    ? "rgba(0, 0, 0, 0.2)"
+    : "rgba(255, 255, 255, 0.2)";
+
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+      style={{
+        "--button-color": buttonTextColor,
+        "--button-bg": buttonBgColor,
+        "--button-border": buttonBorderColor,
+      } as React.CSSProperties}
+    >
       <div className={styles.topButtons}>
         <AddLocationDialog>
           <button className={styles.addButton} aria-label="Add location">
@@ -501,15 +368,24 @@ export function TimeZoneComparer(): React.ReactElement {
                           )}
                         </div>
                       ) : (
-                        <div
+                        <button
+                          type="button"
                           className={styles.hours}
                           onClick={() => {
                             setEditingHour(location.id);
                             setInputValue("");
                           }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setEditingHour(location.id);
+                              setInputValue("");
+                            }
+                          }}
+                          aria-label={`Edit hour, currently ${hours}`}
                         >
                           {hours}
-                        </div>
+                        </button>
                       )}
                     </div>
                     <div className={styles.colonWrapper}>
@@ -580,16 +456,25 @@ export function TimeZoneComparer(): React.ReactElement {
                                 if (e.key === "Escape") setEditingLabel(null);
                               }}
                               className={styles.labelInput}
+                              maxLength={VALIDATION_LIMITS.LABEL_MAX_LENGTH}
                             />
                           ) : (
-                            <span
+                            <button
+                              type="button"
                               onClick={() =>
                                 handleLabelClick(location.id, i, label)
                               }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                  e.preventDefault();
+                                  handleLabelClick(location.id, i, label);
+                                }
+                              }}
                               className={styles.labelText}
+                              aria-label={`Edit label: ${label}`}
                             >
                               {label}
-                            </span>
+                            </button>
                           )}
                         </div>
                       ))}
@@ -610,6 +495,7 @@ export function TimeZoneComparer(): React.ReactElement {
                       className={styles.newLabelInput}
                       placeholder="New label"
                       autoFocus
+                      maxLength={VALIDATION_LIMITS.LABEL_MAX_LENGTH}
                     />
                   </div>
                 ) : (
