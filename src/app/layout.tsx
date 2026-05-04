@@ -105,18 +105,34 @@ export default function RootLayout({
       >
         {children}
         <StructuredData />
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-X6F87S4SBR"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-X6F87S4SBR');
-          `}
-        </Script>
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <Script id="ga-optout" strategy="beforeInteractive">
+              {`
+                try {
+                  var p = new URLSearchParams(window.location.search);
+                  if (p.get('gaoff') === '1') localStorage.setItem('ga-optout', '1');
+                  if (p.get('gaon') === '1') localStorage.removeItem('ga-optout');
+                  if (localStorage.getItem('ga-optout') === '1') {
+                    window['ga-disable-G-X6F87S4SBR'] = true;
+                  }
+                } catch (e) {}
+              `}
+            </Script>
+            <Script
+              src="https://www.googletagmanager.com/gtag/js?id=G-X6F87S4SBR"
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-X6F87S4SBR');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
