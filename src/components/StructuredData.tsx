@@ -2,14 +2,13 @@
    for search crawlers to parse it reliably; next/script defers/externalizes
    the tag and Google often skips those. dangerouslySetInnerHTML is the
    documented Next.js pattern for inline JSON-LD. */
-const SITE_URL = "https://www.tzgrid.com";
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/config/site";
 
 const schema = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "TZGrid",
-  description:
-    "Compare time zones at a glance with stunning day and night gradients. Add locations, customize labels, and travel through time.",
+  name: SITE_NAME,
+  description: SITE_DESCRIPTION,
   url: SITE_URL,
   applicationCategory: "UtilityApplication",
   operatingSystem: "Any",

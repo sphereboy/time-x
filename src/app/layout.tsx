@@ -3,6 +3,12 @@ import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
 import { StructuredData } from "@/components/StructuredData";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+} from "@/config/site";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,13 +21,8 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
-const SITE_NAME = "TZGrid";
-const SITE_TITLE = "TZGrid — Compare Time Zones at a Glance";
-const SITE_DESCRIPTION =
-  "Compare time zones at a glance with stunning day and night gradients. Add locations, customize labels, and travel through time.";
-
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.tzgrid.com"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: SITE_TITLE,
     template: "%s | TZGrid",
@@ -36,8 +37,9 @@ export const metadata: Metadata = {
     "international time",
     "TZGrid",
   ],
-  authors: [{ name: "TZGrid" }],
-  creator: "TZGrid",
+  authors: [{ name: "JNPR DSGN LLC" }],
+  creator: "JNPR DSGN LLC",
+  publisher: "JNPR DSGN LLC",
   alternates: {
     canonical: "/",
   },

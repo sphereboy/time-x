@@ -1,10 +1,12 @@
-"use client";
-
 import Link from "next/link";
 import { COMPANY_NAME } from "@/config/site";
 
-export function Footer() {
-  const currentYear = new Date().getFullYear();
+interface TentacleFooterProps {
+  year?: number;
+}
+
+export function TentacleFooter({ year }: TentacleFooterProps) {
+  const displayYear = year ?? new Date().getFullYear();
 
   return (
     <footer className="py-12 px-6 bg-gray-950 border-t border-gray-800">
@@ -14,10 +16,16 @@ export function Footer() {
             TZGrid
           </div>
           <div className="text-gray-500 text-xs">
-            © {currentYear} {COMPANY_NAME}
+            © {displayYear} {COMPANY_NAME}
           </div>
         </div>
         <div className="flex items-center gap-6 text-sm flex-wrap justify-center">
+          <Link
+            href="/"
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            Home
+          </Link>
           <Link
             href="/app"
             className="text-gray-400 hover:text-white transition-colors"
