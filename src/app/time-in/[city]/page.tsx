@@ -111,7 +111,9 @@ export default function TimeInCityPage({ params }: PageProps) {
         </section>
 
         <CtaOpenInApp
-          caption={`Add ${city.name} to a side-by-side grid with your other timezones.`}
+          label={`Add ${city.name} to TZGrid`}
+          caption={`We'll save ${city.name} to your grid alongside any timezones you already have.`}
+          addSlugs={[city.slug]}
         />
 
         <RelatedLinks

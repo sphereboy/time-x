@@ -147,7 +147,9 @@ export default function ComparePairPage({ params }: PageProps) {
         <ConversionTable from={from} to={to} baseTime={baseTime} />
 
         <CtaOpenInApp
-          caption={`Add ${from.name} and ${to.name} to a live grid and scrub through the day.`}
+          label={`Compare ${from.name} & ${to.name} in TZGrid`}
+          caption={`We'll add both cities to your grid so you can scrub through the day.`}
+          addSlugs={[from.slug, to.slug]}
         />
 
         <RelatedLinks title="Related comparisons" links={relatedLinks} />

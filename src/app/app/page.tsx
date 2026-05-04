@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AddCitiesFromQuery } from "@/components/AddCitiesFromQuery";
 
 export const metadata = {
   title: "App",
@@ -17,6 +18,7 @@ export default function AppPage() {
   return (
     <main className="h-screen overflow-hidden">
       <ErrorBoundary>
+        <AddCitiesFromQuery />
         <TimeZoneComparer />
       </ErrorBoundary>
     </main>
