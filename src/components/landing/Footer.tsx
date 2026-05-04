@@ -9,7 +9,7 @@ export function Footer() {
     <footer className="py-12 px-6 bg-gray-950 border-t border-gray-800">
       <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
         <div className="text-gray-500 text-sm">
-          {currentYear} Time-X
+          {currentYear} TZGrid
         </div>
         <Link
           href="/app"

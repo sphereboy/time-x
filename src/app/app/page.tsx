@@ -2,8 +2,9 @@ import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export const metadata = {
-  title: "Time-X | Compare Time Zones",
-  description: "Compare time zones across the world with visual day/night gradients",
+  title: "App",
+  description:
+    "Compare time zones across the world with visual day/night gradients.",
 };
 
 const TimeZoneComparer = dynamic(

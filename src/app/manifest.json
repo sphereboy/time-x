@@ -1,10 +1,10 @@
 {
-  "name": "Time-X",
-  "short_name": "Time-X",
-  "description": "Time Zone Comparer",
+  "name": "TZGrid — Time Zone Comparer",
+  "short_name": "TZGrid",
+  "description": "Compare time zones at a glance with stunning day and night gradients.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#000000",
   "theme_color": "#000000",
   "icons": [
     {

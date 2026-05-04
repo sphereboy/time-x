@@ -1,7 +1,8 @@
 {
-  "name": "xemit-time-zone-exchange",
+  "name": "tzgrid",
   "version": "0.1.0",
   "private": true,
+  "description": "Compare time zones at a glance with stunning day and night gradients.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

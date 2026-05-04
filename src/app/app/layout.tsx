@@ -1,7 +1,7 @@
 /**
  * App Layout
  *
- * This layout wraps the main Time-X application.
+ * This layout wraps the main TZGrid application.
  *
  * Future Integration Points:
  * - Authentication middleware (check user session)

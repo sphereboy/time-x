@@ -1,8 +1,8 @@
-# Time-X: Modern Time Zone Companion
+# TZGrid: Modern Time Zone Companion
 
-Time-X is an elegant, intuitive time zone comparison tool built with Next.js 14. Whether you're coordinating across continents or planning international calls, Time-X makes time zone management beautifully simple.
+TZGrid is an elegant, intuitive time zone comparison tool built with Next.js 14. Whether you're coordinating across continents or planning international calls, TZGrid makes time zone management beautifully simple.
 
-![Time-X Screenshot](public/screenshot.png)
+![TZGrid Screenshot](public/screenshot.png)
 
 ## ✨ Features
 

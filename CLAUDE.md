@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Time-X is a timezone comparison tool built with Next.js 14. It displays multiple timezone clocks with visual day/night gradients based on the time of day. Users can add locations, customize labels, and manually adjust the time for comparison purposes.
+TZGrid is a timezone comparison tool built with Next.js 14. It displays multiple timezone clocks with visual day/night gradients based on the time of day. Users can add locations, customize labels, and manually adjust the time for comparison purposes.
 
 ## Commands
 

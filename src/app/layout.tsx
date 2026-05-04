@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Script from "next/script";
 import "./globals.css";
+import { StructuredData } from "@/components/StructuredData";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -14,9 +15,65 @@ const geistMono = localFont({
   weight: "100 900",
 });
 
+const SITE_NAME = "TZGrid";
+const SITE_TITLE = "TZGrid — Compare Time Zones at a Glance";
+const SITE_DESCRIPTION =
+  "Compare time zones at a glance with stunning day and night gradients. Add locations, customize labels, and travel through time.";
+
 export const metadata: Metadata = {
-  title: "Time-X",
-  description: "Time Zone Comparer",
+  metadataBase: new URL("https://www.tzgrid.com"),
+  title: {
+    default: SITE_TITLE,
+    template: "%s | TZGrid",
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  keywords: [
+    "time zone converter",
+    "world clock",
+    "timezone comparison",
+    "meeting planner",
+    "international time",
+    "TZGrid",
+  ],
+  authors: [{ name: "TZGrid" }],
+  creator: "TZGrid",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    siteName: SITE_NAME,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: SITE_TITLE,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/opengraph-image"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
@@ -25,10 +82,14 @@ export const metadata: Metadata = {
     apple: { url: "/icon.png", sizes: "192x192", type: "image/png" },
   },
   manifest: "/manifest.json",
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
   themeColor: "#000000",
 };
 
@@ -43,6 +104,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
+        <StructuredData />
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-8N2E91CB8Z"
           strategy="afterInteractive"
