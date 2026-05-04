@@ -1,6 +1,6 @@
 {
   "name": "tzgrid",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Compare time zones at a glance with stunning day and night gradients.",
   "scripts": {
