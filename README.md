@@ -1,47 +1,56 @@
-# TZGrid: Modern Time Zone Companion
+# TZGrid
 
-TZGrid is an elegant, intuitive time zone comparison tool built with Next.js 14. Whether you're coordinating across continents or planning international calls, TZGrid makes time zone management beautifully simple.
+Compare time zones at a glance. Each location is a column with a day/night gradient that tracks the time of day, so you can see who's awake, who's asleep, and what hours overlap.
 
-![TZGrid Screenshot](public/screenshot.png)
+Live at [tzgrid.com](https://tzgrid.com).
 
-## ✨ Features
-
-- 🌍 Real-time time zone comparisons
-- 🎨 Beautiful day/night gradient transitions
-- 📱 Responsive design for all devices
-- 🏷️ Custom labels for locations
-- 🏠 Home location tracking
-- 🔄 Instant time updates
-- 💾 Persistent storage
-- ⚡ Lightning-fast performance
-
-## 🚀 Getting Started
-
-1. Clone the repository:
+## Run locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open <http://localhost:3000>.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Other scripts:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+| --- | --- |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | Next.js ESLint |
+| `npm run type-check` | `tsc --noEmit` |
+| `npm run validate` | type-check + lint + build |
 
-## Learn More
+## How it's built
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework:** Next.js 14 (App Router) + TypeScript
+- **State:** [Zustand](https://github.com/pmndrs/zustand) with `persist` middleware → `localStorage`. See `src/store/timeZoneStore.ts`.
+- **Main view:** `src/components/TimeZoneComparer.tsx` — clock columns, editable hours, gradient backgrounds.
+- **Time math:** `Intl.DateTimeFormat` with IANA identifiers; helpers in `src/lib/timeFormatting.ts`.
+- **Styling:** Tailwind CSS + a CSS Module (`src/styles/TimeZoneComparer.module.css`) for the column layout. Radix UI primitives in `src/components/ui/`.
+- **SEO surface:** programmatic `/compare/[slug]` and `/time-in/[city]` routes for high-intent search traffic.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Project layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/
+├── app/             # routes (App Router)
+├── components/      # TimeZoneComparer, dialogs, ui/ primitives
+├── store/           # zustand store + persistence
+├── lib/             # time formatting, colors, validation
+├── constants/       # IANA timezone mapping
+└── types/           # shared types
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Docs
+
+Deeper notes live in [`docs/`](./docs):
+
+- [`architecture.md`](./docs/architecture.md) — component + data-flow overview
+- [`state-and-persistence.md`](./docs/state-and-persistence.md) — store shape, hydration, schema drift
+- [`styling-and-theming.md`](./docs/styling-and-theming.md) — gradient palette, theming
+- [`seo-and-tentacles.md`](./docs/seo-and-tentacles.md) — programmatic SEO routes
+- [`analytics-and-privacy.md`](./docs/analytics-and-privacy.md) — GA setup and dev guard
+- [`monetization-roadmap.md`](./docs/monetization-roadmap.md) — speculative product directions
