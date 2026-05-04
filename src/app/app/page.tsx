@@ -16,7 +16,7 @@ const TimeZoneComparer = dynamic(
 
 export default function AppPage() {
   return (
-    <main className="h-screen overflow-hidden">
+    <main className="min-h-screen md:h-screen md:overflow-hidden">
       <ErrorBoundary>
         <AddCitiesFromQuery />
         <TimeZoneComparer />

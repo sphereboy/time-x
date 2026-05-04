@@ -343,7 +343,9 @@ export function TimeZoneComparer(): React.ReactElement {
           return (
             <div
               key={location.id}
-              className={styles.timezoneColumn}
+              className={`${styles.timezoneColumn} ${
+                isCurrentTimezone ? styles.timezoneColumnHome : ""
+              }`}
               style={{
                 backgroundColor,
                 color: textColor,
@@ -401,7 +403,9 @@ export function TimeZoneComparer(): React.ReactElement {
                           }}
                           aria-label={`Edit hour, currently ${hours}`}
                         >
-                          {hours}
+                          <span key={hours} className={styles.digit}>
+                            {hours}
+                          </span>
                         </button>
                       )}
                     </div>
@@ -414,7 +418,11 @@ export function TimeZoneComparer(): React.ReactElement {
                         :
                       </div>
                     </div>
-                    <div className={styles.minutes}>{minutes}</div>
+                    <div className={styles.minutes}>
+                      <span key={minutes} className={styles.digit}>
+                        {minutes}
+                      </span>
+                    </div>
                     {settings.showSeconds && (
                       <>
                         <div className={styles.colonWrapper}>
@@ -426,7 +434,11 @@ export function TimeZoneComparer(): React.ReactElement {
                             :
                           </div>
                         </div>
-                        <div className={styles.seconds}>{seconds}</div>
+                        <div className={styles.seconds}>
+                          <span key={seconds} className={styles.digit}>
+                            {seconds}
+                          </span>
+                        </div>
                       </>
                     )}
                     {!settings.use24HourFormat && (
@@ -563,6 +575,38 @@ export function TimeZoneComparer(): React.ReactElement {
           </AddLocationDialog>
         </div>
       )}
+      <div className={styles.mobileToolbar}>
+        <Link
+          href="/"
+          className={styles.mobileToolbarLeft}
+          aria-label="Back to TZGrid home"
+        >
+          TZGrid
+        </Link>
+        <div className={styles.mobileToolbarActions}>
+          <AddLocationDialog>
+            <button aria-label="Add location">
+              <Plus size={20} />
+            </button>
+          </AddLocationDialog>
+          {isManuallyAdjusted && (
+            <button
+              className={styles.resetTimeButton}
+              onClick={handleTimeReset}
+              aria-label="Reset to current time"
+            >
+              Reset Time
+            </button>
+          )}
+          <SettingsDialog />
+          <button
+            onClick={handleReset}
+            aria-label="Reset locations"
+          >
+            <RotateCcw size={20} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
