@@ -45,6 +45,18 @@ export function TimeZoneComparer(): React.ReactElement {
   } | null>(null);
   const [showColon, setShowColon] = useState(true);
   const [isManuallyAdjusted, setIsManuallyAdjusted] = useState(false);
+  const [isDesktopLayout, setIsDesktopLayout] = useState(false);
+
+  // Track viewport so the top-right buttons can adapt to the column
+  // they actually sit over (last on desktop row layout, first on mobile column layout).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(min-width: 768px)");
+    const update = () => setIsDesktopLayout(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   // Initialize timezone once
   useEffect(() => {
@@ -262,18 +274,21 @@ export function TimeZoneComparer(): React.ReactElement {
     return <div>Loading...</div>;
   }
 
-  // Calculate button colors based on first location's background
-  const firstLocation = sortedLocations[0];
-  const firstLocationTime = firstLocation
-    ? formatTime(currentTime, firstLocation.label || "")
+  // Pick the column the top-right buttons actually sit over.
+  // Desktop (row layout) → last column; mobile (column layout) → first column.
+  const anchorLocation = isDesktopLayout
+    ? sortedLocations[sortedLocations.length - 1]
+    : sortedLocations[0];
+  const anchorTime = anchorLocation
+    ? formatTime(currentTime, anchorLocation.label || "")
     : "12:00";
-  const firstHour = parseInt(firstLocationTime.split(":")[0], 10);
-  const firstBgColor = getBackgroundColor(firstHour);
-  const buttonTextColor = isLightColor(firstBgColor) ? "#393939" : "white";
-  const buttonBgColor = isLightColor(firstBgColor)
+  const anchorHour = parseInt(anchorTime.split(":")[0], 10);
+  const anchorBgColor = getBackgroundColor(anchorHour);
+  const buttonTextColor = isLightColor(anchorBgColor) ? "#393939" : "white";
+  const buttonBgColor = isLightColor(anchorBgColor)
     ? "rgba(0, 0, 0, 0.1)"
     : "rgba(255, 255, 255, 0.1)";
-  const buttonBorderColor = isLightColor(firstBgColor)
+  const buttonBorderColor = isLightColor(anchorBgColor)
     ? "rgba(0, 0, 0, 0.2)"
     : "rgba(255, 255, 255, 0.2)";
 
