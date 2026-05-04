@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Trash2, Home, RotateCcw } from "lucide-react";
 import styles from "@/styles/TimeZoneComparer.module.css";
@@ -285,6 +286,9 @@ export function TimeZoneComparer(): React.ReactElement {
         "--button-border": buttonBorderColor,
       } as React.CSSProperties}
     >
+      <Link href="/" className={styles.homeLink} aria-label="Back to TZGrid home">
+        TZGrid
+      </Link>
       <div className={styles.topButtons}>
         <AddLocationDialog>
           <button className={styles.addButton} aria-label="Add location">
