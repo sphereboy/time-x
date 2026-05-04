@@ -134,12 +134,14 @@ export const useTimeZoneStore = create<TimeZoneState>()(
         const homeLocation = locations.find((loc) => loc.isCurrent);
         if (!homeLocation) return locations;
 
-        const homeOffset = getTimezoneOffset(homeLocation.label || "UTC");
-        return [...locations].sort((a, b) => {
-          const aOffset = getTimezoneOffset(a.label || "UTC") - homeOffset;
-          const bOffset = getTimezoneOffset(b.label || "UTC") - homeOffset;
-          return aOffset - bOffset;
-        });
+        const offsets = new Map(
+          locations.map((loc) => [loc.id, getTimezoneOffset(loc.label || "UTC")])
+        );
+        const homeOffset = offsets.get(homeLocation.id) ?? 0;
+        return [...locations].sort(
+          (a, b) =>
+            (offsets.get(a.id)! - homeOffset) - (offsets.get(b.id)! - homeOffset)
+        );
       },
       settings: {
         showSeconds: false,

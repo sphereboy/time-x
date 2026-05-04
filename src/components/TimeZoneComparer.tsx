@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { Plus, Trash2, Home, RotateCcw } from "lucide-react";
@@ -31,7 +31,7 @@ export function TimeZoneComparer(): React.ReactElement {
     resetToCurrentTimezone,
   } = useTimeZoneStore();
 
-  const [currentTime, setLocalCurrentTime] = useState<Date>(new Date());
+  const [currentTime, setLocalCurrentTime] = useState<Date | null>(null);
   const [editingHour, setEditingHour] = useState<string | null>(null);
   const [inputValue, setInputValue] = useState<string>("");
   const [editingLabel, setEditingLabel] = useState<{
@@ -102,6 +102,7 @@ export function TimeZoneComparer(): React.ReactElement {
 
   const handleHourChange = useCallback(
     (_locationId: string, newHour: string) => {
+      if (!currentTime) return;
       const parsedHour = parseInt(newHour, 10);
       const maxHour = settings.use24HourFormat ? 23 : 12;
 
@@ -151,6 +152,7 @@ export function TimeZoneComparer(): React.ReactElement {
       if (e.key === "Enter") {
         handleHourChange(locationId, inputValue);
       } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+        if (!currentTime) return;
         e.preventDefault();
         const currentHour = currentTime.getHours();
         const newHour =
@@ -246,9 +248,6 @@ export function TimeZoneComparer(): React.ReactElement {
     setCurrentTime(newTime);
   }, [resetToCurrentTimezone, setCurrentTime]);
 
-  // Memoize sorted locations to prevent unnecessary re-renders
-  const sortedLocations = useMemo(() => locations, [locations]);
-
   const hourInputStyles = {
     width: "2ch",
     background: "transparent",
@@ -277,12 +276,11 @@ export function TimeZoneComparer(): React.ReactElement {
   // Pick the column the top-right buttons actually sit over.
   // Desktop (row layout) → last column; mobile (column layout) → first column.
   const anchorLocation = isDesktopLayout
-    ? sortedLocations[sortedLocations.length - 1]
-    : sortedLocations[0];
-  const anchorTime = anchorLocation
-    ? formatTime(currentTime, anchorLocation.label || "")
-    : "12:00";
-  const anchorHour = parseInt(anchorTime.split(":")[0], 10);
+    ? locations[locations.length - 1]
+    : locations[0];
+  const anchorHour = anchorLocation
+    ? getAdjustedTime(currentTime, anchorLocation.label || "").getHours()
+    : 12;
   const anchorBgColor = getBackgroundColor(anchorHour);
   const buttonTextColor = isLightColor(anchorBgColor) ? "#393939" : "white";
   const buttonBgColor = isLightColor(anchorBgColor)
@@ -329,7 +327,7 @@ export function TimeZoneComparer(): React.ReactElement {
         </button>
       </div>
       <div className={styles.timezonesContainer}>
-        {sortedLocations.map((location) => {
+        {locations.map((location) => {
           const adjustedTime = getAdjustedTime(
             currentTime,
             location.label || ""
@@ -356,7 +354,7 @@ export function TimeZoneComparer(): React.ReactElement {
                   <button
                     onClick={() => handleRemoveLocation(location.id)}
                     className={styles.deleteButton}
-                    aria-label="Delete location"
+                    aria-label={`Remove ${location.name || location.label}`}
                   >
                     <Trash2 size={16} />
                   </button>
