@@ -7,6 +7,8 @@ Live at [tzgrid.com](https://tzgrid.com).
 ## Run locally
 
 ```bash
+git clone https://github.com/sphereboy/tzgrid.git
+cd tzgrid
 npm install
 npm run dev
 ```

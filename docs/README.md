@@ -35,8 +35,8 @@ There is no test suite.
 ## Local Development
 
 ```bash
-git clone <repo>
-cd time-x
+git clone https://github.com/sphereboy/tzgrid.git
+cd tzgrid
 npm install
 npm run dev
 ```
