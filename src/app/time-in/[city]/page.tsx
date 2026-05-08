@@ -20,15 +20,18 @@ export const dynamic = "force-static";
 export const dynamicParams = false;
 
 interface PageProps {
-  params: { city: string };
+  params: Promise<{ city: string }>;
 }
 
 export function generateStaticParams() {
   return getAllCities().map((c) => ({ city: c.slug }));
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
-  const city = getCityBySlug(params.city);
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { city: citySlug } = await params;
+  const city = getCityBySlug(citySlug);
   if (!city) return {};
 
   const title = `Current Time in ${city.name}, ${city.country}`;
@@ -53,8 +56,9 @@ export function generateMetadata({ params }: PageProps): Metadata {
   };
 }
 
-export default function TimeInCityPage({ params }: PageProps) {
-  const city = getCityBySlug(params.city);
+export default async function TimeInCityPage({ params }: PageProps) {
+  const { city: citySlug } = await params;
+  const city = getCityBySlug(citySlug);
   if (!city) notFound();
 
   const baseTime = new Date();

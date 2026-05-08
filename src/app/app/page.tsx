@@ -1,18 +1,12 @@
-import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AddCitiesFromQuery } from "@/components/AddCitiesFromQuery";
+import { TimeZoneComparer } from "./TimeZoneComparerClient";
 
 export const metadata = {
   title: "App",
   description:
     "Compare time zones across the world with visual day/night gradients.",
 };
-
-const TimeZoneComparer = dynamic(
-  () =>
-    import("@/components/TimeZoneComparer").then((mod) => mod.TimeZoneComparer),
-  { ssr: false }
-);
 
 export default function AppPage() {
   return (

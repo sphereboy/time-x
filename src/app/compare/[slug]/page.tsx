@@ -19,21 +19,24 @@ export const dynamic = "force-static";
 export const dynamicParams = false;
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export function generateStaticParams() {
   return generateCanonicalPairs().map((slug) => ({ slug }));
 }
 
-export function generateMetadata({ params }: PageProps): Metadata {
-  const pair = parseComparePair(params.slug);
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const pair = parseComparePair(slug);
   if (!pair) return {};
 
   const { from, to } = pair;
   const title = `${from.name} vs ${to.name} Time Difference & Converter`;
   const description = `Compare the current time in ${from.name} and ${to.name}. See the time difference, business-hour overlap, and a full hour-by-hour conversion table.`;
-  const url = `/compare/${params.slug}`;
+  const url = `/compare/${slug}`;
 
   return {
     title,
@@ -53,8 +56,9 @@ export function generateMetadata({ params }: PageProps): Metadata {
   };
 }
 
-export default function ComparePairPage({ params }: PageProps) {
-  const pair = parseComparePair(params.slug);
+export default async function ComparePairPage({ params }: PageProps) {
+  const { slug } = await params;
+  const pair = parseComparePair(slug);
   if (!pair) notFound();
 
   const { from, to } = pair;
