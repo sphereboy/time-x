@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/sphereboy/tzgrid/compare/v1.0.0...v1.0.1) (2026-05-08)
+
+
+### Bug Fixes
+
+* upgrade Next.js to 15.5.18 to patch security advisories ([5023440](https://github.com/sphereboy/tzgrid/commit/50234402819d37f43308b44302b392686acc2a7c))
+
 ## 1.0.0 (2026-05-04)
 
 
