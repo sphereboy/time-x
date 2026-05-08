@@ -47,6 +47,7 @@ next-env.d.ts
 .vscode/
 *.swp
 *.swo
+.claude/
 
 # PWA
 public/sw.js
